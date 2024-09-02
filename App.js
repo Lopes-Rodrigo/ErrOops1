@@ -1,20 +1,29 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import HomeScreen from './src/screens/HomeScreen';
+import ErrorExamplesScreen from './src/screens/ErrorExamplesScreen';
+import SearchScreen from './src/screens/SearchScreen';
+import CommunityScreen from './src/screens/CommunityScreen';
+import LoginScreen from './src/screens/LoginScreen';
+import SignupScreen from './src/screens/SignupScreen';
 
-export default function App() {
+
+const Stack = createStackNavigator();
+
+function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Home">
+        <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'Página Inicial' }} />
+        <Stack.Screen name="ErrorExamples" component={ErrorExamplesScreen} options={{ title: 'Exemplos de Erros' }} />
+        <Stack.Screen name="Search" component={SearchScreen} options={{ title: 'Pesquisar' }} />
+        <Stack.Screen name="Community" component={CommunityScreen} options={{ title: 'Comunidade' }} />
+        <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'Login' }} />
+        <Stack.Screen name="Signup" component={SignupScreen} options={{ title: 'Cadastro' }} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default App;
