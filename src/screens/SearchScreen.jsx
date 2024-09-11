@@ -1,42 +1,70 @@
 import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { auth, db } from '../config/firebase'; 
 
 const SearchScreen = () => {
   const [searchText, setSearchText] = useState('');
+  const [searchResults, setSearchResults] = useState(null); 
 
-  const handleSearch = () => {
-    // Função para lidar com a pesquisa
-    console.log('Searching for:', searchText);
+  const handleSearch = async () => {
+    try {
+      const errorsCollectionRef = collection(db, 'errors'); // Verifique se 'errors' está correto
+      const q = query(errorsCollectionRef, where('errorMessage', '==', searchText)); // Verifique se 'errorMessage' está correto
+
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        console.log('Nenhum resultado encontrado.');
+        setSearchResults(null); 
+        return;
+      }
+
+      const results = querySnapshot.docs.map(doc => ({
+        ...doc.data(),
+        id: doc.id,
+      }));
+      setSearchResults(results[0]); 
+
+      console.log('Search results:', results);
+    } catch (error) {
+      console.error('Error searching for errors:', error);
+    }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.message}>Qual seu erro?</Text>
-      <View style={styles.suggestions}>
-        <TouchableOpacity style={styles.suggestionButton}>
-          <Text style={styles.suggestionButtonText}>Erro de superação de stack</Text>
+
+      <View style={styles.searchArea}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Digite o erro que deseja procurar..."
+          placeholderTextColor="#8a0b07"
+          value={searchText}
+          onChangeText={setSearchText}
+        />
+        <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
+          <Text style={styles.searchButtonText}>Buscar</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.suggestionButton}>
-          <Text style={styles.suggestionButtonText}>Erro de compilação JSX</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.suggestionButton}>
-          <Text style={styles.suggestionButtonText}>Erro de dependência não encontrada</Text>
-        </TouchableOpacity>
+
+        {/* Exibindo o resultado da pesquisa */}
+        {searchResults && (
+          <View style={styles.results}>
+            <Text>{searchResults.errorMessage}</Text> 
+          </View>
+        )}
+
+        {/* Mostrar mensagem caso não haja resultados */}
+        {!searchResults && searchText !== '' && (
+          <View style={styles.results}>
+            <Text>Nenhum resultado encontrado para "{searchText}".</Text>
+          </View>
+        )}
       </View>
-      <TextInput
-        style={styles.searchInput}
-        placeholder="Digite o erro que deseja procurar..."
-        placeholderTextColor="#8a0b07"
-        value={searchText}
-        onChangeText={setSearchText}
-      />
-      <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
-        <Text style={styles.searchButtonText}>Buscar</Text>
-      </TouchableOpacity>
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -47,6 +75,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#333',
     marginBottom: 16,
+  },
+  searchArea: {
+    paddingBottom: 16,
   },
   searchInput: {
     height: 40,
@@ -64,16 +95,11 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
   },
-  suggestions: {
-    marginBottom: 16,
-  },
-  suggestionButton: {
-    backgroundColor: '#f0f0f0',
+  results: {
+    marginTop: 16,
     padding: 10,
-    marginBottom: 8,
-  },
-  suggestionButtonText: {
-    color: '#333',
+    borderWidth: 1,
+    borderColor: '#ccc',
   },
 });
 
