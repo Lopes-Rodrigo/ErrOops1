@@ -7,9 +7,14 @@ import CommunityScreen from '../screens/CommunityScreen';
 import { createMaterialBottomTabNavigator } from '@react-navigation/material-bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { MaterialCommunityIcons } from 'react-native-vector-icons';
+import { useTheme } from 'react-native-paper';
 
 const Stack = createNativeStackNavigator();
 const Tab = createMaterialBottomTabNavigator();
+
+
+
+
 
 export default function AppNavigator() {
   return (
@@ -26,10 +31,13 @@ export default function AppNavigator() {
 }
 
 function TabNavigator() {
+  const theme = useTheme();
+  theme.colors.secondaryContainer = "transperent"
   return (
+
     <Tab.Navigator
       barStyle={{ backgroundColor: '#8a0b07' }} // Cor de fundo
-      activeColor="#ffffff" // Cor dos ícones ativos
+      activeColor="black" // Cor dos ícones ativos
       inactiveColor="#ffffff" // Cor dos ícones inativos
       shifting={false} // Se você quiser que o rótulo apareça para todos os ícones
       

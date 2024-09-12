@@ -1,105 +1,205 @@
-import React, { useState } from 'react';
-import { View, TextInput, StyleSheet, Text, TouchableOpacity } from 'react-native';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { auth, db } from '../config/firebase'; 
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, getDocs } from 'firebase/firestore';
+
+// Configuração do Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyDcQU6h9Hdl_iABchuS3OvK-xKB44Gt43Y",
+  authDomain: "erroops-93c8a.firebaseapp.com",
+  projectId: "erroops-93c8a",
+  storageBucket: "erroops-93c8a.appspot.com",
+  messagingSenderId: "694707365976",
+  appId: "1:694707365976:web:440ace5273d2c0aa4c022d"
+};
+
+// Inicializa o Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 const SearchScreen = () => {
-  const [searchText, setSearchText] = useState('');
-  const [searchResults, setSearchResults] = useState(null); 
+  const [searchTerm, setSearchTerm] = useState('');
+  const [results, setResults] = useState([]);
+  const [suggestedErrors, setSuggestedErrors] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const handleSearch = async () => {
+  // Função para buscar erros aleatórios ao carregar a tela
+  const fetchRandomErrors = async () => {
     try {
-      const errorsCollectionRef = collection(db, 'errors'); // Verifique se 'errors' está correto
-      const q = query(errorsCollectionRef, where('errorMessage', '==', searchText)); // Verifique se 'errorMessage' está correto
-
+      const q = collection(db, 'error'); // Busca todos os erros
       const querySnapshot = await getDocs(q);
-
-      if (querySnapshot.empty) {
-        console.log('Nenhum resultado encontrado.');
-        setSearchResults(null); 
-        return;
-      }
-
-      const results = querySnapshot.docs.map(doc => ({
-        ...doc.data(),
+      const allErrors = querySnapshot.docs.map((doc) => ({
         id: doc.id,
+        ...doc.data(),
       }));
-      setSearchResults(results[0]); 
 
-      console.log('Search results:', results);
+      // Seleciona até 3 erros aleatórios
+      const randomErrors = allErrors.sort(() => 0.5 - Math.random()).slice(0, 3);
+      setSuggestedErrors(randomErrors);
     } catch (error) {
-      console.error('Error searching for errors:', error);
+      console.error("Erro ao buscar os erros sugeridos: ", error);
     }
   };
 
+  // Chama a função de busca de erros ao carregar a tela
+  useEffect(() => {
+    fetchRandomErrors();
+  }, []);
+
+  // Função para buscar erros com base no termo de pesquisa
+  const searchErrors = async (term) => {
+    if (!term.trim()) {
+      alert("Por favor, insira um termo de busca.");
+      return;
+    }
+
+    setLoading(true);
+    setResults([]); // Limpa os resultados anteriores
+
+    try {
+      const q = collection(db, 'error'); // Aqui a busca é genérica, por simplicidade
+      const querySnapshot = await getDocs(q);
+      const searchResults = querySnapshot.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .filter((error) => error.nome.toLowerCase().includes(term.toLowerCase())); // Busca por nome
+
+      if (searchResults.length === 0) {
+        alert('Nenhum erro encontrado.');
+      } else {
+        setResults(searchResults);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar os dados: ", error);
+      alert('Erro ao buscar os dados.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderResult = ({ item }) => (
+    <View style={styles.resultBox}>
+      <Text style={styles.errorTitle}>Explicação:</Text>
+      <Text>{item.info}</Text>
+      <Text style={styles.solutionTitle}>Soluções:</Text>
+      <Text>{item.solucao}</Text>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
-      <Text style={styles.message}>Qual seu erro?</Text>
+      <Text style={styles.title}>ErrOops</Text>
+      <Text style={styles.subtitle}>Como podemos te ajudar hoje?</Text>
 
-      <View style={styles.searchArea}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Digite o erro que deseja procurar..."
-          placeholderTextColor="#8a0b07"
-          value={searchText}
-          onChangeText={setSearchText}
-        />
-        <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
-          <Text style={styles.searchButtonText}>Buscar</Text>
-        </TouchableOpacity>
-
-        {/* Exibindo o resultado da pesquisa */}
-        {searchResults && (
-          <View style={styles.results}>
-            <Text>{searchResults.errorMessage}</Text> 
-          </View>
-        )}
-
-        {/* Mostrar mensagem caso não haja resultados */}
-        {!searchResults && searchText !== '' && (
-          <View style={styles.results}>
-            <Text>Nenhum resultado encontrado para "{searchText}".</Text>
-          </View>
-        )}
+      {/* Sugestões dinâmicas de erros */}
+      <View style={styles.errorButtons}>
+        {suggestedErrors.map((error, index) => (
+          <TouchableOpacity
+            key={index}
+            style={styles.errorButton}
+            onPress={() => searchErrors(error.nome)}>
+            <Text style={styles.errorButtonText}>{error.nome}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Digite seu erro"
+        value={searchTerm}
+        onChangeText={setSearchTerm}
+      />
+
+      {/* Botão de Pesquisa */}
+      <TouchableOpacity style={styles.searchButton} onPress={() => searchErrors(searchTerm)}>
+        <Text style={styles.searchButtonText}>Pesquisar</Text>
+      </TouchableOpacity>
+
+      {loading && <Text style={styles.loadingText}>Carregando...</Text>}
+
+      <FlatList
+        data={results}
+        renderItem={renderResult}
+        keyExtractor={(item) => item.id}
+        style={styles.resultList}
+      />
     </View>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
     backgroundColor: '#fff',
+    padding: 20,
   },
-  message: {
-    fontSize: 18,
-    color: '#333',
-    marginBottom: 16,
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#8a0b07',
+    textAlign: 'center',
   },
-  searchArea: {
-    paddingBottom: 16,
+  subtitle: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginVertical: 20,
+    color: '#000',
   },
-  searchInput: {
-    height: 40,
-    borderColor: '#ccc',
+  errorButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 20,
+  },
+  errorButton: {
+    backgroundColor: '#8a0b07',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+  },
+  errorButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  input: {
     borderWidth: 1,
-    paddingHorizontal: 8,
-    marginBottom: 16,
+    borderColor: '#8a0b07',
+    padding: 10,
+    marginVertical: 20,
+    borderRadius: 5,
   },
   searchButton: {
     backgroundColor: '#8a0b07',
     padding: 10,
+    borderRadius: 5,
     alignItems: 'center',
+    marginBottom: 20,
   },
   searchButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontWeight: 'bold',
   },
-  results: {
-    marginTop: 16,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#ccc',
+  loadingText: {
+    textAlign: 'center',
+    marginVertical: 10,
+  },
+  resultList: {
+    marginTop: 20,
+  },
+  resultBox: {
+    backgroundColor: '#f4f4f4',
+    padding: 20,
+    borderRadius: 10,
+    marginBottom: 15,
+  },
+  errorTitle: {
+    fontWeight: 'bold',
+    color: '#8a0b07',
+    fontSize: 18,
+    marginBottom: 10,
+  },
+  solutionTitle: {
+    marginTop: 10,
+    fontWeight: 'bold',
+    color: '#8a0b07',
   },
 });
 
