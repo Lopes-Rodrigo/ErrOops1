@@ -78,11 +78,12 @@ const SearchScreen = () => {
 
   const renderResult = ({ item }) => (
     <View style={styles.resultBox}>
-      <Text style={styles.errorTitle}>Explicação:</Text>
+      <Text style={styles.errorName}>{item.nome}</Text> {/* Nome do erro alinhado à direita */}
+      <Text style={styles.sectionTitle}>Explicação:</Text>
       <Text>{item.info}</Text>
-      <Text style={styles.solutionTitle}>Soluções:</Text>
+      <Text style={styles.sectionTitle}>Soluções:</Text>
       <Text>{item.solucao}</Text>
-      <Text style={styles.exemploTitle}>Exemplos:</Text>
+      <Text style={styles.sectionTitle}>Exemplos:</Text>
       <Text>{item.exemplo}</Text>
     </View>
   );
@@ -192,26 +193,21 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 15,
   },
-  errorTitle: {
+  errorName: {
     fontWeight: 'bold',
     color: '#8a0b07',
     fontSize: 18,
     marginBottom: 10,
-    marginTop:10,
+    marginTop: 10,
+    textAlign: 'center', // Alinha o nome do erro à direita
   },
-  solutionTitle: {
+  sectionTitle: {
     fontWeight: 'bold',
     color: '#8a0b07',
     fontSize: 18,
     marginBottom: 10,
-    marginTop:10,
-  },
-  exemploTitle: {
-    fontWeight: 'bold',
-    color: '#8a0b07',
-    fontSize: 18,
-    marginBottom: 10,
-    marginTop:10,
+    marginTop: 10,
+    textAlign: 'left', // Mantém os títulos como "Explicação" alinhados à esquerda
   },
 });
 
