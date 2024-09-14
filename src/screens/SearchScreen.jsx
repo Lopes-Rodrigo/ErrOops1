@@ -82,6 +82,8 @@ const SearchScreen = () => {
       <Text>{item.info}</Text>
       <Text style={styles.solutionTitle}>Soluções:</Text>
       <Text>{item.solucao}</Text>
+      <Text style={styles.exemploTitle}>Exemplos:</Text>
+      <Text>{item.exemplo}</Text>
     </View>
   );
 
@@ -195,11 +197,21 @@ const styles = StyleSheet.create({
     color: '#8a0b07',
     fontSize: 18,
     marginBottom: 10,
+    marginTop:10,
   },
   solutionTitle: {
-    marginTop: 10,
     fontWeight: 'bold',
     color: '#8a0b07',
+    fontSize: 18,
+    marginBottom: 10,
+    marginTop:10,
+  },
+  exemploTitle: {
+    fontWeight: 'bold',
+    color: '#8a0b07',
+    fontSize: 18,
+    marginBottom: 10,
+    marginTop:10,
   },
 });
 
