@@ -7,6 +7,13 @@ export default StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
   },
+  innerContainer:{
+    paddingHorizontal: 20,
+    alignSelf: "stretch",
+},
+input: {
+    marginBottom: 10,
+  },
   heading: {
     fontSize: 24,
     fontWeight: 'bold',
