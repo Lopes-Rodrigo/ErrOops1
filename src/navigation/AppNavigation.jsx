@@ -8,14 +8,8 @@ import { createMaterialBottomTabNavigator } from '@react-navigation/material-bot
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { MaterialCommunityIcons } from 'react-native-vector-icons';
 import { useTheme } from 'react-native-paper';
-import LoginScreen from '../screens/LoginScreen'
-import RegisterScreen from '../screens/RegisterScreen';
-
 const Stack = createNativeStackNavigator();
 const Tab = createMaterialBottomTabNavigator();
-
-
-
 
 
 export default function AppNavigator() {
@@ -27,16 +21,6 @@ export default function AppNavigator() {
           component={TabNavigator}
           options={{ headerShown: false }}
         />
-        <Stack.Screen
-          name="LoginScreen"
-          component={LoginScreen}
-          options={{ title: "Login" }}
-        />
-        <Stack.Screen
-          name="RegisterScreen"
-          component={RegisterScreen}
-          options={{ title: "Cadastro de usuário" }}
-        />
       </Stack.Navigator>
     </NavigationContainer>
   );
@@ -44,7 +28,7 @@ export default function AppNavigator() {
 
 function TabNavigator() {
   const theme = useTheme();
-  theme.colors.secondaryContainer = "transperent"
+  theme.colors.secondaryContainer = "transperent";
   return (
 
     <Tab.Navigator
