@@ -1,23 +1,48 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import HomeScreen from '../screens/HomeScreen';
-import ErrorExamplesScreen from '../screens/ErrorExamplesScreen';
-import SearchScreen from '../screens/SearchScreen';
-import CommunityScreen from '../screens/CommunityScreen';
 import { createMaterialBottomTabNavigator } from '@react-navigation/material-bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { MaterialCommunityIcons } from 'react-native-vector-icons';
 import { useTheme } from 'react-native-paper';
+
+// Telas de navegação por abas
+import HomeScreen from '../screens/HomeScreen';
+import ErrorExamplesScreen from '../screens/ErrorExamplesScreen';
+import SearchScreen from '../screens/SearchScreen';
+import CommunityScreen from '../screens/CommunityScreen';
+
+// Telas de autenticação
+import WelcomeScreen from '../screens/WelcomeScreen';
+import RegisterScreen from '../screens/RegisterScreen';
+import LoginScreen from '../screens/LoginScreen';
+
 const Stack = createNativeStackNavigator();
 const Tab = createMaterialBottomTabNavigator();
-
 
 export default function AppNavigator() {
   return (
     <NavigationContainer>
-      <Stack.Navigator>
+      <Stack.Navigator initialRouteName="Welcome">
+        {/* Telas de Autenticação */}
         <Stack.Screen
-          name="TabNavigator"
+          name="Welcome"
+          component={WelcomeScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Register"
+          component={RegisterScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+          options={{ headerShown: false }}
+        />
+        
+        {/* Telas com Navegação em Abas */}
+        <Stack.Screen
+          name="Main"
           component={TabNavigator}
           options={{ headerShown: false }}
         />
@@ -28,15 +53,14 @@ export default function AppNavigator() {
 
 function TabNavigator() {
   const theme = useTheme();
-  theme.colors.secondaryContainer = "transperent";
+  theme.colors.secondaryContainer = "transparent";
+  
   return (
-
     <Tab.Navigator
-      barStyle={{ backgroundColor: '#8a0b07' }} // Cor de fundo
+      barStyle={{ backgroundColor: '#8a0b07' }} // Cor de fundo da barra
       activeColor="black" // Cor dos ícones ativos
       inactiveColor="#ffffff" // Cor dos ícones inativos
-      shifting={false} // Se você quiser que o rótulo apareça para todos os ícones
-      
+      shifting={false} // Controle do rótulo dos ícones
     >
       <Tab.Screen
         name="Home"
@@ -48,7 +72,7 @@ function TabNavigator() {
           ),
         }}
       />
-
+      
       <Tab.Screen
         name="ErrorExamples"
         component={ErrorExamplesScreen}
