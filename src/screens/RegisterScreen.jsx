@@ -1,10 +1,10 @@
-// screens/RegisterScreen.js
 import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import Icon from 'react-native-vector-icons/Ionicons';  // Ícone de voltar
 import { FontAwesome } from 'react-native-vector-icons'; // Ícone do Google
 import { auth } from '../config/firebase';
+import { getFirestore, collection, addDoc, getDoc, doc, setDoc } from 'firebase/firestore';
 
 export default function RegisterScreen({ navigation }) {
   const [name, setName] = useState('');
@@ -13,6 +13,10 @@ export default function RegisterScreen({ navigation }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
 
+  // Instância do Firestore
+  const db = getFirestore();
+
+  // Função para registrar novo usuário com email e senha
   const handleRegister = () => {
     if (password !== confirmPassword) {
       setError('As senhas não coincidem');
@@ -20,9 +24,22 @@ export default function RegisterScreen({ navigation }) {
     }
 
     createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
+      .then(async (userCredential) => {
         const user = userCredential.user;
-        console.log('Usuário registrado:', user);
+
+        // Adicionar o usuário na coleção 'usuarios'
+        try {
+          await setDoc(doc(db, 'usuarios', user.uid), {
+            uid: user.uid,
+            name: name,
+            email: user.email,
+            createdAt: new Date(),
+          });
+          console.log('Usuário registrado e salvo no Firestore:', user);
+        } catch (firestoreError) {
+          console.error('Erro ao salvar usuário no Firestore:', firestoreError);
+        }
+
         navigation.navigate('Main'); // Redireciona para a página principal após o registro
       })
       .catch((error) => {
@@ -30,11 +47,32 @@ export default function RegisterScreen({ navigation }) {
       });
   };
 
+  // Função para login e cadastro via Google
   const handleGoogleLogin = () => {
     const provider = new GoogleAuthProvider();
     signInWithPopup(auth, provider)
-      .then((result) => {
-        console.log('Usuário logado com Google:', result.user);
+      .then(async (result) => {
+        const user = result.user;
+
+        // Verificar se o usuário já existe no Firestore
+        const userDoc = doc(db, 'usuarios', user.uid);
+        const userSnap = await getDoc(userDoc);
+
+        if (!userSnap.exists()) {
+          // Se o usuário não existir, adiciona no Firestore
+          try {
+            await setDoc(userDoc, {
+              uid: user.uid,
+              name: user.displayName,
+              email: user.email,
+              createdAt: new Date(),
+            });
+            console.log('Usuário Google salvo no Firestore:', user);
+          } catch (firestoreError) {
+            console.error('Erro ao salvar usuário Google no Firestore:', firestoreError);
+          }
+        }
+
         navigation.navigate('Main'); // Redireciona para a página principal após login com Google
       })
       .catch((error) => {
@@ -134,17 +172,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   googleButton: {
-    backgroundColor: '#fff', // Fundo branco
+    backgroundColor: '#fff',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    borderColor: '#8a0b07', // Borda para dar destaque
+    borderColor: '#8a0b07',
     borderWidth: 2,
-    width: 60, // Largura e altura ajustadas
+    width: 60,
     height: 60,
     alignSelf: 'center',
     marginTop: 20,
   },
-  
 });

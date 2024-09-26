@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; 
 import { View, Text, TextInput, Button, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, onSnapshot } from 'firebase/firestore';
@@ -39,14 +39,20 @@ const CommunityScreen = () => {
 
   const postError = async () => {
     if (errorText.trim()) {
-      try {
-        await addDoc(collection(db, 'errors'), {
-          username: '@usuario' + Math.floor(Math.random() * 1000),
-          text: errorText,
-        });
-        setErrorText('');
-      } catch (error) {
-        console.error("Erro ao postar: ", error);
+      const user = auth.currentUser; // Obtém o usuário autenticado
+      if (user) {
+        const email = user.email; // Pega o e-mail do usuário logado
+        try {
+          await addDoc(collection(db, 'errors'), {
+            email, // Armazena o e-mail do usuário logado
+            text: errorText,
+          });
+          setErrorText('');
+        } catch (error) {
+          console.error("Erro ao postar: ", error);
+        }
+      } else {
+        console.error("Usuário não está logado.");
       }
     }
   };
@@ -61,7 +67,7 @@ const CommunityScreen = () => {
   const renderError = ({ item }) => {
     return (
       <View style={styles.errorBox}>
-        <Text style={styles.username}>{item.username}</Text>
+        <Text style={styles.username}>{item.email}</Text> {/* Exibe o e-mail do usuário */}
         <Text>{item.text}</Text>
         <View style={styles.commentSection}>
           <TextInput

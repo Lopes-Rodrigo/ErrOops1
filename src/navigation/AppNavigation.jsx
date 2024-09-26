@@ -74,17 +74,6 @@ function TabNavigator() {
       />
       
       <Tab.Screen
-        name="ErrorExamples"
-        component={ErrorExamplesScreen}
-        options={{
-          title: 'Exemplos',
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="information" color={color} size={26} />
-          ),
-        }}
-      />
-
-      <Tab.Screen
         name="Search"
         component={SearchScreen}
         options={{
@@ -102,6 +91,16 @@ function TabNavigator() {
           title: 'Comunidade',
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons name="account-group" color={color} size={26} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Messages"
+        component={ErrorExamplesScreen}
+        options={{
+          title: 'Mensagens',
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons name="android-messages" color={color} size={26} />
           ),
         }}
       />
