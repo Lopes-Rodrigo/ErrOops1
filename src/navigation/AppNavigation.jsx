@@ -1,23 +1,39 @@
 import React from 'react';
+import { View, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createMaterialBottomTabNavigator } from '@react-navigation/material-bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createMaterialBottomTabNavigator } from '@react-navigation/material-bottom-tabs';
 import { MaterialCommunityIcons } from 'react-native-vector-icons';
-import { useTheme } from 'react-native-paper';
 
-// Telas de navegação por abas
 import HomeScreen from '../screens/HomeScreen';
-import ErrorExamplesScreen from '../screens/ErrorExamplesScreen';
+import ChatScreen from '../screens/ChatScreen';
 import SearchScreen from '../screens/SearchScreen';
 import CommunityScreen from '../screens/CommunityScreen';
-
-// Telas de autenticação
+import ProfileScreen from '../screens/ProfileScreen';
 import WelcomeScreen from '../screens/WelcomeScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import LoginScreen from '../screens/LoginScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createMaterialBottomTabNavigator();
+
+// Componente da Navbar superior com botão de perfil no canto direito
+function Navbar({ navigation }) {
+  return (
+    <View style={styles.navbar}>
+      {/* Logo */}
+      <Image
+        source={{ uri: 'https://your-logo-url.com/logo.png' }} // Substitua pela URL real do seu logo
+        style={styles.logo}
+      />
+
+      {/* Botão de perfil no canto direito */}
+      <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Profile')}>
+        <MaterialCommunityIcons name="account" color="#ffffff" size={30} />
+      </TouchableOpacity>
+    </View>
+  );
+}
 
 export default function AppNavigator() {
   return (
@@ -39,12 +55,27 @@ export default function AppNavigator() {
           component={LoginScreen}
           options={{ headerShown: false }}
         />
-        
-        {/* Telas com Navegação em Abas */}
+
+        {/* Telas com a Navbar superior */}
         <Stack.Screen
           name="Main"
           component={TabNavigator}
-          options={{ headerShown: false }}
+          options={({ navigation }) => ({
+            headerTitle: () => <Navbar navigation={navigation} />,
+            headerStyle: { backgroundColor: '#8a0b07' }, // Cor de fundo da Navbar
+            headerTitleAlign: 'center', // Centraliza o conteúdo na Navbar
+          })}
+        />
+
+        {/* Tela de Perfil */}
+        <Stack.Screen
+          name="Profile"
+          component={ProfileScreen}
+          options={{
+            title: 'Meu Perfil',
+            headerStyle: { backgroundColor: '#8a0b07' },
+            headerTintColor: '#fff',
+          }}
         />
       </Stack.Navigator>
     </NavigationContainer>
@@ -52,15 +83,11 @@ export default function AppNavigator() {
 }
 
 function TabNavigator() {
-  const theme = useTheme();
-  theme.colors.secondaryContainer = "transparent";
-  
   return (
     <Tab.Navigator
-      barStyle={{ backgroundColor: '#8a0b07' }} // Cor de fundo da barra
-      activeColor="black" // Cor dos ícones ativos
-      inactiveColor="#ffffff" // Cor dos ícones inativos
-      shifting={false} // Controle do rótulo dos ícones
+      barStyle={{ backgroundColor: '#8a0b07' }}
+      activeColor="black"
+      inactiveColor="#ffffff"
     >
       <Tab.Screen
         name="Home"
@@ -72,7 +99,6 @@ function TabNavigator() {
           ),
         }}
       />
-      
       <Tab.Screen
         name="Search"
         component={SearchScreen}
@@ -83,7 +109,6 @@ function TabNavigator() {
           ),
         }}
       />
-
       <Tab.Screen
         name="Community"
         component={CommunityScreen}
@@ -96,7 +121,7 @@ function TabNavigator() {
       />
       <Tab.Screen
         name="Messages"
-        component={ErrorExamplesScreen}
+        component={ChatScreen}
         options={{
           title: 'Mensagens',
           tabBarIcon: ({ color }) => (
@@ -107,3 +132,24 @@ function TabNavigator() {
     </Tab.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  navbar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    height: 60,
+    backgroundColor: '#8a0b07',
+  },
+  logo: {
+    width: 100,
+    height: 40,
+    resizeMode: 'contain',
+  },
+  profileButton: {
+    padding: 10,
+  },
+});
+
+

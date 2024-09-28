@@ -118,7 +118,7 @@ const CommunityScreen = () => {
         onChangeText={setErrorText}
         style={styles.input}
       />
-      <Button title="Postar Erro" onPress={postError} color="#8a0b07" />
+      <Button title="Postar Erro" onPress={postError} color="#8a0b07" borderRadius="5px "/>
       <FlatList
         data={errors}
         renderItem={renderError}

@@ -6,19 +6,23 @@ export default StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
+
+    padding: 20,
   },
-  innerContainer:{
+  innerContainer: {
     paddingHorizontal: 20,
     alignSelf: "stretch",
-},
-input: {
+  },
+  input: {
     marginBottom: 10,
   },
   heading: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#8a0b07',
+    textAlign: 'center',
     marginBottom: 20,
+    marginVertical: 20,
   },
   button: {
     backgroundColor: '#8a0b07',
