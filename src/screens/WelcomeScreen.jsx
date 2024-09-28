@@ -7,11 +7,11 @@ export default function WelcomeScreen({ navigation }) {
     <View style={styles.container}>
       <Text style={styles.logo}>ErrOops</Text>
       <View style={styles.imagePlaceholder} />
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Register')}>
-        <Text style={styles.buttonText}>Registre-se</Text>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Login')}>
+        <Text style={styles.buttonText}>Entre</Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-        <Text style={styles.loginText}>Já tem uma conta? Entre</Text>
+      <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+        <Text style={styles.loginText}>Ainda não tem uma conta? Registre-se</Text>
       </TouchableOpacity>
     </View>
   );

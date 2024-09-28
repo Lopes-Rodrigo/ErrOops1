@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react'; 
 import { View, Text, TextInput, Button, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, onSnapshot } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
 // Configuração do Firebase
 const firebaseConfig = {
-   apiKey: "AIzaSyDcQU6h9Hdl_iABchuS3OvK-xKB44Gt43Y",
-    authDomain: "erroops-93c8a.firebaseapp.com",
-    projectId: "erroops-93c8a",
-    storageBucket: "erroops-93c8a.appspot.com",
-    messagingSenderId: "694707365976",
-    appId: "1:694707365976:web:440ace5273d2c0aa4c022d"
+  apiKey: "AIzaSyDcQU6h9Hdl_iABchuS3OvK-xKB44Gt43Y",
+  authDomain: "erroops-93c8a.firebaseapp.com",
+  projectId: "erroops-93c8a",
+  storageBucket: "erroops-93c8a.appspot.com",
+  messagingSenderId: "694707365976",
+  appId: "1:694707365976:web:440ace5273d2c0aa4c022d"
 };
 
 // Inicialize o Firebase
@@ -46,6 +46,7 @@ const CommunityScreen = () => {
           await addDoc(collection(db, 'errors'), {
             email, // Armazena o e-mail do usuário logado
             text: errorText,
+            comments: [] // Inicia a lista de comentários vazia
           });
           setErrorText('');
         } catch (error) {
@@ -59,16 +60,41 @@ const CommunityScreen = () => {
 
   const postComment = async (errorId, commentText) => {
     if (commentText.trim()) {
-      setComments((prev) => ({ ...prev, [errorId]: '' }));
-      // Aqui você pode adicionar a funcionalidade de salvar o comentário no Firebase
+      const user = auth.currentUser; // Obtém o usuário autenticado
+      if (user) {
+        const email = user.email; // Pega o e-mail do usuário logado
+        try {
+          const errorRef = doc(db, 'errors', errorId);
+          await updateDoc(errorRef, {
+            comments: arrayUnion({ email, commentText }) // Adiciona o novo comentário ao array de comentários
+          });
+          setComments((prev) => ({ ...prev, [errorId]: '' })); // Limpa o campo de input de comentários
+        } catch (error) {
+          console.error("Erro ao postar comentário: ", error);
+        }
+      } else {
+        console.error("Usuário não está logado.");
+      }
     }
   };
 
   const renderError = ({ item }) => {
     return (
       <View style={styles.errorBox}>
-        <Text style={styles.username}>{item.email}</Text> {/* Exibe o e-mail do usuário */}
-        <Text>{item.text}</Text>
+        <Text style={styles.username}>{item.email}</Text> {/* Exibe o e-mail do usuário */} 
+        <Text style={styles.errorText}>{item.text}</Text> {/* Exibe o texto do erro */}
+        
+        {/* Renderiza os comentários se existirem */}
+        {item.comments && item.comments.length > 0 && (
+          <View style={styles.commentList}>
+            {item.comments.map((comment, index) => (
+              <Text key={index} style={styles.comment}>
+                <Text style={styles.commentUser}>{comment.email}:</Text> {comment.commentText}
+              </Text>
+            ))}
+          </View>
+        )}
+
         <View style={styles.commentSection}>
           <TextInput
             placeholder="Comente aqui..."
@@ -130,6 +156,9 @@ const styles = StyleSheet.create({
     color: '#fff',
     marginBottom: 10,
   },
+  errorText: {
+    color: '#fff',
+  },
   commentSection: {
     marginTop: 10,
   },
@@ -144,6 +173,18 @@ const styles = StyleSheet.create({
   commentButton: {
     color: '#fff',
     marginTop: 5,
+  },
+  commentList: {
+    marginTop: 10,
+  },
+  comment: {
+    backgroundColor: '#fff',
+    padding: 10,
+    marginVertical: 5,
+    borderRadius: 5,
+  },
+  commentUser: {
+    fontWeight: 'bold',
   },
 });
 
