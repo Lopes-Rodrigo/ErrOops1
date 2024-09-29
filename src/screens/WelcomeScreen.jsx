@@ -8,7 +8,7 @@ export default function WelcomeScreen({ navigation }) {
       <Text style={styles.logo}>ErrOops</Text>
       <View style={styles.imagePlaceholder} />
       <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Login')}>
-        <Text style={styles.buttonText}>Entre</Text>
+        <Text style={styles.buttonText}>Entrar</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={() => navigation.navigate('Register')}>
         <Text style={styles.loginText}>Ainda não tem uma conta? Registre-se</Text>

@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createMaterialBottomTabNavigator } from '@react-navigation/material-bottom-tabs';
 import { MaterialCommunityIcons } from 'react-native-vector-icons';
 
+import SplashScreen from '../screens/SplashScreen'; // Adicionando a SplashScreen
 import HomeScreen from '../screens/HomeScreen';
 import ChatScreen from '../screens/ChatScreen';
 import SearchScreen from '../screens/SearchScreen';
@@ -38,13 +39,22 @@ function Navbar({ navigation }) {
 export default function AppNavigator() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Welcome">
-        {/* Telas de Autenticação */}
+      <Stack.Navigator initialRouteName="Splash">
+        {/* Tela de Splash com animação */}
+        <Stack.Screen
+          name="Splash"
+          component={SplashScreen}
+          options={{ headerShown: false }}
+        />
+
+        {/* Tela de Boas-vindas */}
         <Stack.Screen
           name="Welcome"
           component={WelcomeScreen}
           options={{ headerShown: false }}
         />
+        
+        {/* Telas de Autenticação */}
         <Stack.Screen
           name="Register"
           component={RegisterScreen}
@@ -82,6 +92,7 @@ export default function AppNavigator() {
   );
 }
 
+// TabNavigator contendo as páginas principais do app
 function TabNavigator() {
   return (
     <Tab.Navigator
@@ -133,6 +144,7 @@ function TabNavigator() {
   );
 }
 
+// Estilos para a Navbar
 const styles = StyleSheet.create({
   navbar: {
     flexDirection: 'row',
@@ -151,5 +163,3 @@ const styles = StyleSheet.create({
     padding: 10,
   },
 });
-
-
