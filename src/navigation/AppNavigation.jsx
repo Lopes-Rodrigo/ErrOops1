@@ -5,7 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createMaterialBottomTabNavigator } from '@react-navigation/material-bottom-tabs';
 import { MaterialCommunityIcons } from 'react-native-vector-icons';
 
-import SplashScreen from '../screens/SplashScreen'; // Adicionando a SplashScreen
+import SplashScreen from '../screens/SplashScreen'; 
 import HomeScreen from '../screens/HomeScreen';
 import ChatScreen from '../screens/ChatScreen';
 import SearchScreen from '../screens/SearchScreen';
@@ -18,18 +18,21 @@ import LoginScreen from '../screens/LoginScreen';
 const Stack = createNativeStackNavigator();
 const Tab = createMaterialBottomTabNavigator();
 
-// Componente da Navbar superior com botão de perfil no canto direito
+// Navbar superior com botão de perfil à direita
 function Navbar({ navigation }) {
   return (
     <View style={styles.navbar}>
       {/* Logo */}
       <Image
-        source={{ uri: 'https://your-logo-url.com/logo.png' }} // Substitua pela URL real do seu logo
+        source={{ uri: 'https://your-logo-url.com/logo.png' }} 
         style={styles.logo}
       />
 
-      {/* Botão de perfil no canto direito */}
-      <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Profile')}>
+      {/* Botão de perfil à direita */}
+      <TouchableOpacity
+        style={styles.profileButton}
+        onPress={() => navigation.navigate('Profile')}
+      >
         <MaterialCommunityIcons name="account" color="#ffffff" size={30} />
       </TouchableOpacity>
     </View>
@@ -40,44 +43,19 @@ export default function AppNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Splash">
-        {/* Tela de Splash com animação */}
-        <Stack.Screen
-          name="Splash"
-          component={SplashScreen}
-          options={{ headerShown: false }}
-        />
-
-        {/* Tela de Boas-vindas */}
-        <Stack.Screen
-          name="Welcome"
-          component={WelcomeScreen}
-          options={{ headerShown: false }}
-        />
-        
-        {/* Telas de Autenticação */}
-        <Stack.Screen
-          name="Register"
-          component={RegisterScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Login"
-          component={LoginScreen}
-          options={{ headerShown: false }}
-        />
-
-        {/* Telas com a Navbar superior */}
+        <Stack.Screen name="Splash" component={SplashScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Welcome" component={WelcomeScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
         <Stack.Screen
           name="Main"
           component={TabNavigator}
           options={({ navigation }) => ({
             headerTitle: () => <Navbar navigation={navigation} />,
-            headerStyle: { backgroundColor: '#8a0b07' }, // Cor de fundo da Navbar
-            headerTitleAlign: 'center', // Centraliza o conteúdo na Navbar
+            headerStyle: { backgroundColor: '#8a0b07' },
+            headerTitleAlign: 'center',
           })}
         />
-
-        {/* Tela de Perfil */}
         <Stack.Screen
           name="Profile"
           component={ProfileScreen}
@@ -92,7 +70,6 @@ export default function AppNavigator() {
   );
 }
 
-// TabNavigator contendo as páginas principais do app
 function TabNavigator() {
   return (
     <Tab.Navigator
@@ -144,7 +121,7 @@ function TabNavigator() {
   );
 }
 
-// Estilos para a Navbar
+// Estilos da Navbar
 const styles = StyleSheet.create({
   navbar: {
     flexDirection: 'row',

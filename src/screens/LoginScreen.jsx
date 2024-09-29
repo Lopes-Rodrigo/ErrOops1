@@ -42,7 +42,7 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login to your Account</Text>
+      <Text style={styles.title}>Entrar na sua conta</Text>
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -60,7 +60,7 @@ export default function LoginScreen({ navigation }) {
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Sign In</Text>
+        <Text style={styles.buttonText}>Entrar</Text>
       </TouchableOpacity>
 
       <Text style={styles.orText}>Ou entre com</Text>

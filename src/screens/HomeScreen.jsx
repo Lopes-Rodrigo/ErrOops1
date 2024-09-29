@@ -6,7 +6,7 @@ import styles from '../config/styles'; // Supondo que você tenha um arquivo de 
 const HomeScreen = () => {
   return (
     <View style={styles.container}>
-      <Navbar /> {/* Navbar */}
+      
       <Text style={styles.heading}>Bem-vindo ao ErrOops</Text>
     </View>
   );
