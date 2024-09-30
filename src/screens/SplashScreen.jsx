@@ -36,13 +36,6 @@ export default function SplashScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Animated.Image
-        source={{ uri: 'https://your-logo-url.com/logo.png' }} // Substitua pela URL do seu logo
-        style={[
-          styles.logo,
-          { transform: [{ scale: logoScale }], opacity: logoOpacity },
-        ]}
-      />
       <Animated.Text style={[styles.appName, { opacity: textOpacity }]}>
         ErrOops
       </Animated.Text>
@@ -57,14 +50,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#8a0b07', // Cor de fundo da tela de splash
   },
-  logo: {
-    width: 150,
-    height: 150,
-  },
+
   appName: {
-    marginTop: 20,
+   
     fontSize: 32,
     fontWeight: 'bold',
     color: '#ffffff', // Cor do texto ErrOops
+    textAlign: 'center', // Centraliza o texto
   },
 });

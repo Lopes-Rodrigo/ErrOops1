@@ -5,6 +5,7 @@ import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 
 import { auth } from '../config/firebase';
 import { FontAwesome } from 'react-native-vector-icons';
 
+
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -42,6 +43,9 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Icon name="arrow-back" size={24} color="#fff" />
+      </TouchableOpacity>
       <Text style={styles.title}>Entrar na sua conta</Text>
       <TextInput
         style={styles.input}
@@ -125,5 +129,13 @@ const styles = StyleSheet.create({
     color: 'red',
     marginBottom: 15,
     textAlign: 'center',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 40,
+    left: 20,
+    backgroundColor: '#8a0b07',
+    padding: 10,
+    borderRadius: 10,
   },
 });

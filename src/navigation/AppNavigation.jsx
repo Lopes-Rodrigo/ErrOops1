@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createMaterialBottomTabNavigator } from '@react-navigation/material-bottom-tabs';
 import { MaterialCommunityIcons } from 'react-native-vector-icons';
+import { useTheme } from 'react-native-paper';
 
 import SplashScreen from '../screens/SplashScreen'; 
 import HomeScreen from '../screens/HomeScreen';
@@ -22,11 +23,8 @@ const Tab = createMaterialBottomTabNavigator();
 function Navbar({ navigation }) {
   return (
     <View style={styles.navbar}>
-      {/* Logo */}
-      <Image
-        source={{ uri: 'https://your-logo-url.com/logo.png' }} 
-        style={styles.logo}
-      />
+      {/* Logo centralizado */}
+      
 
       {/* Botão de perfil à direita */}
       <TouchableOpacity
@@ -71,6 +69,8 @@ export default function AppNavigator() {
 }
 
 function TabNavigator() {
+  const theme = useTheme();
+  theme.colors.secondaryContainer = "transperent";
   return (
     <Tab.Navigator
       barStyle={{ backgroundColor: '#8a0b07' }}
@@ -125,18 +125,21 @@ function TabNavigator() {
 const styles = StyleSheet.create({
   navbar: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between', 
     paddingHorizontal: 15,
     height: 60,
     backgroundColor: '#8a0b07',
   },
   logo: {
-    width: 100,
+    flex: 1, // Faz o logo ocupar o espaço restante
     height: 40,
     resizeMode: 'contain',
+    alignSelf: 'center', // Centraliza o logo verticalmente
   },
   profileButton: {
     padding: 10,
+    position:"relative",
+    alignItems:"flex-end"
   },
 });

@@ -61,7 +61,7 @@ const SearchScreen = () => {
       const querySnapshot = await getDocs(q);
       const searchResults = querySnapshot.docs
         .map((doc) => ({ id: doc.id, ...doc.data() }))
-        .filter((error) => error.nome.toLowerCase().includes(term.toLowerCase())); // Busca por nome
+        .filter((error) => error.nome?.toLowerCase().includes(term.toLowerCase())); // Busca por nome, com validação
 
       if (searchResults.length === 0) {
         alert('Nenhum erro encontrado.');
@@ -78,13 +78,13 @@ const SearchScreen = () => {
 
   const renderResult = ({ item }) => (
     <View style={styles.resultBox}>
-      <Text style={styles.errorName}>{item.nome}</Text> {/* Nome do erro alinhado à direita */}
+      <Text style={styles.errorName}>{item.nome ? item.nome : 'Nome não disponível'}</Text>
       <Text style={styles.sectionTitle}>Explicação:</Text>
-      <Text>{item.info}</Text>
+      <Text>{item.info ? item.info : 'Informação não disponível'}</Text>
       <Text style={styles.sectionTitle}>Soluções:</Text>
-      <Text>{item.solucao}</Text>
+      <Text>{item.solucao ? item.solucao : 'Solução não disponível'}</Text>
       <Text style={styles.sectionTitle}>Exemplos:</Text>
-      <Text>{item.exemplo}</Text>
+      <Text>{item.exemplo ? item.exemplo : 'Exemplo não disponível'}</Text>
     </View>
   );
 
@@ -100,7 +100,7 @@ const SearchScreen = () => {
             key={index}
             style={styles.errorButton}
             onPress={() => searchErrors(error.nome)}>
-            <Text style={styles.errorButtonText}>{error.nome}</Text>
+            <Text style={styles.errorButtonText}>{error.nome ? error.nome : 'Erro'}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginBottom: 10,
     marginTop: 10,
-    textAlign: 'center', // Alinha o nome do erro à direita
+    textAlign: 'center',
   },
   sectionTitle: {
     fontWeight: 'bold',
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginBottom: 10,
     marginTop: 10,
-    textAlign: 'left', // Mantém os títulos como "Explicação" alinhados à esquerda
+    textAlign: 'left',
   },
 });
 
