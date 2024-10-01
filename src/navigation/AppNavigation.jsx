@@ -15,6 +15,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import WelcomeScreen from '../screens/WelcomeScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import LoginScreen from '../screens/LoginScreen';
+import SearchChatScreen from '../screens/SearchChatScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createMaterialBottomTabNavigator();
@@ -45,6 +46,7 @@ export default function AppNavigator() {
         <Stack.Screen name="Welcome" component={WelcomeScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="ChatScreen" component={ChatScreen} options={{ headerShown: false }} />
         <Stack.Screen
           name="Main"
           component={TabNavigator}
@@ -108,8 +110,8 @@ function TabNavigator() {
         }}
       />
       <Tab.Screen
-        name="Messages"
-        component={ChatScreen}
+        name="SearchChatScreen"
+        component={SearchChatScreen}
         options={{
           title: 'Mensagens',
           tabBarIcon: ({ color }) => (
