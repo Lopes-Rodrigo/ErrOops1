@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createMaterialBottomTabNavigator } from '@react-navigation/material-bottom-tabs';
 import { MaterialCommunityIcons } from 'react-native-vector-icons';
 import { useTheme } from 'react-native-paper';
+import { Image } from 'expo-image'; // Importa expo-image
 
 import SplashScreen from '../screens/SplashScreen'; 
 import HomeScreen from '../screens/HomeScreen';
@@ -25,7 +26,12 @@ function Navbar({ navigation }) {
   return (
     <View style={styles.navbar}>
       {/* Logo centralizado */}
-      
+      <Image
+        source={require('../../assets/ErrOops.png')} // Substitua pelo caminho do seu logo
+        style={styles.logo}
+        contentFit="contain"
+        transition={1000} // Transição suave para carregar a imagem
+      />
 
       {/* Botão de perfil à direita */}
       <TouchableOpacity
@@ -72,7 +78,8 @@ export default function AppNavigator() {
 
 function TabNavigator() {
   const theme = useTheme();
-  theme.colors.secondaryContainer = "transperent";
+  theme.colors.secondaryContainer = "transparent";
+  
   return (
     <Tab.Navigator
       barStyle={{ backgroundColor: '#8a0b07' }}
@@ -128,7 +135,7 @@ const styles = StyleSheet.create({
   navbar: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between', 
+    justifyContent: 'space-between',
     paddingHorizontal: 15,
     height: 60,
     backgroundColor: '#8a0b07',
@@ -141,7 +148,7 @@ const styles = StyleSheet.create({
   },
   profileButton: {
     padding: 10,
-    position:"relative",
-    alignItems:"flex-end"
+    position: "relative",
+    alignItems: "flex-end",
   },
 });
