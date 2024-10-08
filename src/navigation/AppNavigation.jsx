@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createMaterialBottomTabNavigator } from '@react-navigation/material-bottom-tabs';
 import { MaterialCommunityIcons } from 'react-native-vector-icons';
 import { useTheme } from 'react-native-paper';
+import { Menu, Divider, Button, Provider } from 'react-native-paper';
 import { Image } from 'expo-image'; // Importa expo-image
+import { getAuth } from 'firebase/auth'; // Assumindo que Firebase Auth está configurado
+import { getFirestore, doc, getDoc } from 'firebase/firestore'; // Para acessar Firestore
 
 import SplashScreen from '../screens/SplashScreen'; 
 import HomeScreen from '../screens/HomeScreen';
@@ -22,25 +25,83 @@ const Stack = createNativeStackNavigator();
 const Tab = createMaterialBottomTabNavigator();
 
 // Navbar superior com botão de perfil à direita
-function Navbar({ navigation }) {
-  return (
-    <View style={styles.navbar}>
-      {/* Logo centralizado */}
-      <Image
-        source={require('../../assets/ErrOops.png')} // Substitua pelo caminho do seu logo
-        style={styles.logo}
-        contentFit="contain"
-        transition={1000} // Transição suave para carregar a imagem
-      />
 
-      {/* Botão de perfil à direita */}
-      <TouchableOpacity
-        style={styles.profileButton}
-        onPress={() => navigation.navigate('Profile')}
-      >
-        <MaterialCommunityIcons name="account" color="#ffffff" size={30} />
-      </TouchableOpacity>
-    </View>
+
+function Navbar({ navigation }) {
+  const [visible, setVisible] = useState(false);
+  const [profileImageUrl, setProfileImageUrl] = useState(null); // Armazena a URL da imagem do usuário
+
+  const auth = getAuth(); // Autenticação do Firebase
+  const db = getFirestore(); // Instância do Firestore
+
+  // Função para buscar a URL da imagem do perfil
+  const fetchProfileImage = async () => {
+    const user = auth.currentUser; // Usuário logado
+    if (user) {
+      const userDoc = doc(db, 'usuarios', user.uid); // Referência ao documento do usuário
+      const userSnap = await getDoc(userDoc); // Obtem os dados do Firestore
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        setProfileImageUrl(userData.profileImageUrl); // Pega a URL da imagem de perfil
+      }
+    }
+  };
+
+  // Chama a função para buscar a imagem do perfil ao montar o componente
+  useEffect(() => {
+    fetchProfileImage();
+  }, []);
+
+  const openMenu = () => setVisible(true);
+  const closeMenu = () => setVisible(false);
+
+  return (
+    <Provider>
+      <View style={styles.navbar}>
+        {/* Botão de perfil com foto do usuário e menu suspenso */}
+        <Menu
+          visible={visible}
+          onDismiss={closeMenu}
+          anchor={
+            <TouchableOpacity
+              style={styles.profileButton}
+              onPress={openMenu} // Abre o menu ao clicar
+            >
+              {/* Substitui o ícone pela foto do usuário ou mantém um ícone padrão caso não haja imagem */}
+              {profileImageUrl ? (
+                <Image
+                  source={{ uri: profileImageUrl }} // Usa a URL da imagem
+                  style={styles.userImage} // Estilo da imagem do usuário
+                />
+              ) : (
+                <MaterialCommunityIcons name="account" color="#ffffff" size={30} /> // Ícone padrão caso não haja imagem
+              )}
+            </TouchableOpacity>
+          }
+          contentStyle={styles.menuContent} // Adiciona estilos personalizados ao menu
+        >
+          {/* Opção de editar perfil com ícone */}
+          <Menu.Item 
+            onPress={() => {
+              closeMenu();
+              navigation.navigate('Profile');
+            }} 
+            title="Editar Perfil"
+            icon="account-edit" // Nome direto do ícone, usando o MaterialCommunityIcons
+          />
+          <Divider />
+          {/* Opção de sair com ícone */}
+          <Menu.Item 
+            onPress={() => {
+              closeMenu();
+              navigation.navigate('Welcome');
+            }} 
+            title="Sair"
+            icon="logout" // Nome direto do ícone, usando o MaterialCommunityIcons
+          />
+        </Menu>
+      </View>
+    </Provider>
   );
 }
 
@@ -135,20 +196,23 @@ const styles = StyleSheet.create({
   navbar: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center', // Centraliza o conteúdo horizontalmente
     paddingHorizontal: 15,
     height: 60,
     backgroundColor: '#8a0b07',
   },
-  logo: {
-    flex: 1, // Faz o logo ocupar o espaço restante
-    height: 40,
-    resizeMode: 'contain',
-    alignSelf: 'center', // Centraliza o logo verticalmente
-  },
   profileButton: {
     padding: 10,
     position: "relative",
-    alignItems: "flex-end",
+    alignItems: "center", // Centraliza a imagem horizontalmente
+  },
+  userImage: {
+    width: 40, // Largura do avatar
+    height: 40, // Altura do avatar
+    borderRadius: 20, // Faz a imagem ficar redonda
+  },
+  menuContent: {
+    marginLeft: -90, // Ajusta a margem para evitar que o menu fique muito no canto
+    marginTop: 10,   // Ajusta a margem superior para garantir espaço entre a imagem e o menu
   },
 });

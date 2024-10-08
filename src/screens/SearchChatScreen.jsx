@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, FlatList, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Image } from 'expo-image'; // Importa expo-image
-import { collection, query, getDocs, setDoc, doc, serverTimestamp, getDoc } from 'firebase/firestore';
+import { collection, query, getDocs, onSnapshot, orderBy } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
-import { db, auth } from '../config/firebase'; // Importa a configuração do Firebase
+import { db, auth } from '../config/firebase'; // Importa sua configuração Firebase
 
 const SearchChatScreen = ({ navigation }) => {
   const [search, setSearch] = useState('');
   const [loggedUser, setLoggedUser] = useState(null);
   const [users, setUsers] = useState([]);
+  const [chats, setChats] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Verifica se há um usuário autenticado
@@ -17,7 +18,6 @@ const SearchChatScreen = ({ navigation }) => {
       if (user) {
         setLoggedUser(user);
       } else {
-        // Redirecionar para tela de login caso necessário
         navigation.navigate('LoginScreen');
       }
     });
@@ -36,7 +36,6 @@ const SearchChatScreen = ({ navigation }) => {
             ...doc.data(),
           }));
           setUsers(userList);
-          setIsLoading(false);
         } catch (error) {
           console.log('Erro ao buscar usuários:', error);
         }
@@ -45,55 +44,65 @@ const SearchChatScreen = ({ navigation }) => {
     }
   }, [loggedUser]);
 
+  // Carrega os chats onde o usuário autenticado trocou mensagens
+  useEffect(() => {
+    if (loggedUser) {
+      const q = query(
+        collection(db, 'chats'),
+        orderBy('lastMessageTime', 'desc')
+      );
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const chatList = querySnapshot.docs
+          .filter((doc) => {
+            const chatUsers = doc.data().users || [];
+            return chatUsers.includes(loggedUser.email); // Verifica se o usuário autenticado está na lista
+          })
+          .map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+        setChats(chatList);
+        setIsLoading(false);
+      });
+      return unsubscribe;
+    }
+  }, [loggedUser]);
+
   // Função para iniciar um novo chat ou navegar para um existente
   const startChat = async (otherUser) => {
-    if (!otherUser || !otherUser.email) {
-      console.error('Usuário inválido ao tentar iniciar o chat');
-      return;
-    }
-
-    const chatId = getChatId(loggedUser.email, otherUser.email);
-
-    const chatRef = doc(db, 'chats', chatId); // Atualizado para coleção 'chats'
-    const chatDoc = await getDoc(chatRef);
-
-    if (!chatDoc.exists()) {
-      await setDoc(chatRef, {
-        users: [loggedUser.email, otherUser.email],
-        lastMessage: '',
-        lastMessageTime: serverTimestamp(),
-        lastMessageSender: '',
-      });
-    }
-
     navigation.navigate('ChatScreen', { userId: loggedUser.uid, otherUserId: otherUser.id });
   };
 
-  // Função para gerar o ID do chat com base nos e-mails dos usuários
-  const getChatId = (user1, user2) => {
-    return user1 < user2 ? `${user1}_${user2}` : `${user2}_${user1}`;
+  // Renderiza a lista de chats com última mensagem e horário
+  const renderChat = ({ item }) => {
+    const otherUserEmail = item.users.find((email) => email !== loggedUser.email); // Encontra o outro usuário
+    const otherUser = users.find((user) => user.email === otherUserEmail);
+
+    if (!otherUser) return null;
+
+    return (
+      <TouchableOpacity style={styles.conversationItem} onPress={() => startChat(otherUser)}>
+        <Image
+          source={otherUser.profileImageUrl ? { uri: otherUser.profileImageUrl } : require('../../assets/ErrOops.png')}
+          style={styles.profileImage}
+          placeholder="blur"
+          contentFit="cover"
+          transition={1000}
+        />
+        <View style={styles.conversationText}>
+          <Text style={styles.conversationName}>{otherUser.nome || 'Usuário Desconhecido'}</Text>
+          <Text style={styles.lastMessage}>{item.lastMessage || 'Sem mensagens'}</Text>
+          <Text style={styles.messageTime}>
+            {item.lastMessageTime?.toDate().toLocaleString('pt-BR') || 'Data desconhecida'}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
   };
 
-  // Renderiza um item da lista de usuários
-  const renderUser = ({ item }) => (
-    <TouchableOpacity style={styles.conversationItem} onPress={() => startChat(item)}>
-      <Image
-        source={item.profileImageUrl ? { uri: item.profileImageUrl } : require('../../assets/ErrOops.png')} // Verifica se existe uma URL da imagem de perfil
-        style={styles.profileImage}
-        placeholder="blur" // Placeholder opcional para carregamento
-        contentFit="cover"
-        transition={1000} // Transição suave para carregar a imagem
-      />
-      <View style={styles.conversationText}>
-        <Text style={styles.conversationName}>{item.nome || 'Usuário Desconhecido'}</Text>
-        <Text style={styles.conversationEmail}>{item.email}</Text>
-      </View>
-    </TouchableOpacity>
-  );
-
-  // Função para filtrar usuários pela pesquisa
-  const filteredUsers = users.filter((user) =>
-    user.name?.toLowerCase().includes(search.toLowerCase()) || user.email?.toLowerCase().includes(search.toLowerCase())
+  // Função para filtrar chats pela pesquisa
+  const filteredChats = chats.filter((chat) =>
+    chat.users.some((email) => email.toLowerCase().includes(search.toLowerCase()))
   );
 
   return (
@@ -109,9 +118,9 @@ const SearchChatScreen = ({ navigation }) => {
         <Text>Carregando...</Text>
       ) : (
         <FlatList
-          data={filteredUsers}
+          data={filteredChats}
           keyExtractor={(item) => item.id}
-          renderItem={renderUser}
+          renderItem={renderChat} // Atualiza para exibir os chats filtrados
         />
       )}
     </View>
@@ -152,10 +161,15 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
-  conversationEmail: {
+  lastMessage: {
     color: '#666',
     fontSize: 14,
     marginTop: 5,
+  },
+  messageTime: {
+    color: '#999',
+    fontSize: 12,
+    marginTop: 2,
   },
 });
 
