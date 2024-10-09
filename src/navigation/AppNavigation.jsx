@@ -205,6 +205,7 @@ const styles = StyleSheet.create({
     padding: 10,
     position: "relative",
     alignItems: "center", // Centraliza a imagem horizontalmente
+    marginLeft: 400,
   },
   userImage: {
     width: 40, // Largura do avatar
@@ -212,7 +213,7 @@ const styles = StyleSheet.create({
     borderRadius: 20, // Faz a imagem ficar redonda
   },
   menuContent: {
-    marginLeft: -90, // Ajusta a margem para evitar que o menu fique muito no canto
-    marginTop: 10,   // Ajusta a margem superior para garantir espaço entre a imagem e o menu
+    marginLeft: 205, // Ajusta a margem para evitar que o menu fique muito no canto
+    marginTop: 35,   // Ajusta a margem superior para garantir espaço entre a imagem e o menu
   },
 });

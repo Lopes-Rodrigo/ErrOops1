@@ -7,15 +7,9 @@ const Navbar = () => {
 
   return (
     <View style={styles.navbarContainer}>
-      <Image
-        
-        style={styles.logo}
-      />
+    
       <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
-        <Image
-          source={{ uri: 'https://placekitten.com/50/50' }} // Ícone de perfil temporário
-          style={styles.profileIcon}
-        />
+        
       </TouchableOpacity>
     </View>
   );
@@ -32,16 +26,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
   },
-  logo: {
-    width: 120,
-    height: 40,
-    resizeMode: 'contain',
-  },
-  profileIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-  },
+
 });
 
 export default Navbar;

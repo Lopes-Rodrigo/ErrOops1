@@ -98,6 +98,9 @@ export default function RegisterScreen({ navigation }) {
         <Icon name="arrow-back" size={24} color="#fff" />
       </TouchableOpacity>
       
+      {/* Exibir imagem de perfil, se houver */}
+      {imageUri ? <Image source={{ uri: imageUri }} style={styles.profileImage} /> : null}
+
       <TextInput
         style={styles.input}
         placeholder="Nome"
@@ -129,8 +132,7 @@ export default function RegisterScreen({ navigation }) {
         secureTextEntry
       />
 
-      {/* Exibir imagem de perfil, se houver */}
-      {imageUri ? <Image source={{ uri: imageUri }} style={styles.profileImage} /> : null}
+      
 
       {/* Botão para selecionar imagem */}
       <TouchableOpacity style={styles.imagePickerButton} onPress={selectProfileImage}>
