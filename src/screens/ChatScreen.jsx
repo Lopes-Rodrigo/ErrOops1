@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, Button, FlatList, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TextInput, Button, FlatList, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, query, orderBy, onSnapshot, addDoc } from 'firebase/firestore';
+import { getFirestore, collection, query, orderBy, onSnapshot, addDoc, doc, getDoc } from 'firebase/firestore';
 import { serverTimestamp } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons'; // Ícones, incluindo a seta de voltar
 
@@ -23,6 +23,18 @@ const ChatScreen = ({ route, navigation }) => {
   const { userId, otherUserId } = route.params;
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const [otherUserData, setOtherUserData] = useState(null);
+
+  // Puxa os dados do outro usuário da coleção "usuarios"
+  useEffect(() => {
+    const fetchOtherUserData = async () => {
+      const otherUserDoc = await getDoc(doc(db, 'usuarios', otherUserId));
+      if (otherUserDoc.exists()) {
+        setOtherUserData(otherUserDoc.data());
+      }
+    };
+    fetchOtherUserData();
+  }, [otherUserId]);
 
   // Carrega mensagens e atualiza em tempo real
   useEffect(() => {
@@ -76,10 +88,26 @@ const ChatScreen = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* Botão de voltar */}
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Ionicons name="arrow-back" size={24} color="#8a0b07" />
-      </TouchableOpacity>
+      {/* Barra de navegação com a seta de voltar, foto do usuário e nome */}
+      <View style={styles.navBar}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#8a0b07" />
+        </TouchableOpacity>
+        {otherUserData && (
+          <View style={styles.userInfo}>
+            <Image
+              source={{ uri: otherUserData.profileImageUrl || 'https://placekitten.com/200/200' }}
+              style={styles.profileImage}
+            />
+            <View style={styles.userDetails}>
+              <Text style={styles.userName}>{otherUserData.nome || 'Usuário'}</Text>
+              <Text style={styles.lastLogin}>
+                Última vez online: {otherUserData.ultimoLogin?.toDate().toLocaleString() || 'Desconhecido'}
+              </Text>
+            </View>
+          </View>
+        )}
+      </View>
 
       {/* Lista de mensagens */}
       <FlatList
@@ -106,19 +134,43 @@ const ChatScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff', // Fundo branco
+    backgroundColor: '#ffffff',
     justifyContent: 'space-between',
   },
-  backButton: {
+  navBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 10,
-    position: 'absolute',
-    top: 40,
-    left: 20,
-    zIndex: 1,
+    borderBottomWidth: 1,
+    borderColor: '#ddd',
+  },
+  backButton: {
+    marginRight: 10,
+  },
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  profileImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 10,
+  },
+  userDetails: {
+    flexDirection: 'column',
+  },
+  userName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#8a0b07',
+  },
+  lastLogin: {
+    fontSize: 12,
+    color: '#999',
   },
   messageList: {
     padding: 10,
-    marginTop: 60, // Espaço para o botão de voltar
   },
   messageContainer: {
     maxWidth: '80%',
@@ -128,18 +180,18 @@ const styles = StyleSheet.create({
   },
   sender: {
     alignSelf: 'flex-end',
-    backgroundColor: '#8a0b07', // Mensagem do remetente com fundo #8a0b07
+    backgroundColor: '#8a0b07',
   },
   receiver: {
     alignSelf: 'flex-start',
-    backgroundColor: '#f1f1f1', // Mensagem do receptor com fundo claro
+    backgroundColor: '#f1f1f1',
   },
   messageText: {
-    color: '#ffffff', // Texto das mensagens do remetente
+    color: '#ffffff',
   },
   timestamp: {
     fontSize: 10,
-    color: '#999', // Cor do timestamp
+    color: '#999',
     textAlign: 'right',
   },
   inputContainer: {
@@ -152,7 +204,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#8a0b07', // Borda da caixa de entrada
+    borderColor: '#8a0b07',
     padding: 10,
     borderRadius: 5,
     marginRight: 10,

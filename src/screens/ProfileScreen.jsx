@@ -2,15 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { auth, db } from '../config/firebase';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, deleteDoc } from 'firebase/firestore';
+import { useNavigation } from '@react-navigation/native';
 
 const ProfileScreen = () => {
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [photoURL, setPhotoURL] = useState('');
-  const [isLoadingImage, setIsLoadingImage] = useState(false);
-
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false); // Novo estado para confirmar exclusão
   const user = auth.currentUser;
+  const navigation = useNavigation();
 
   useEffect(() => {
     // Puxa os dados do Firestore da coleção 'usuarios'
@@ -49,15 +50,12 @@ const ProfileScreen = () => {
   };
 
   const pickImage = async () => {
-    // Solicita permissão para acessar a galeria
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
     if (permissionResult.granted === false) {
       alert('Permissão para acessar a galeria é necessária!');
       return;
     }
 
-    // Abre a galeria para selecionar a imagem
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -70,6 +68,47 @@ const ProfileScreen = () => {
     }
   };
 
+  const deleteAccount = async () => {
+    try {
+      // Deleta o documento do Firestore
+      await deleteDoc(doc(db, 'usuarios', user.uid));
+      // Deleta a conta do Firebase Authentication
+      await user.delete();
+      // Redireciona para a SplashScreen
+      navigation.replace('Splash');
+    } catch (error) {
+      console.error('Erro ao excluir conta: ', error);
+      alert('Erro ao excluir a conta.');
+    }
+  };
+
+  const showConfirmDelete = () => {
+    setIsConfirmingDelete(true); // Exibe a página de confirmação
+  };
+
+  const cancelDelete = () => {
+    setIsConfirmingDelete(false); // Oculta a página de confirmação
+  };
+
+  if (isConfirmingDelete) {
+    // Página de confirmação de exclusão de conta
+    return (
+      <View style={styles.confirmContainer}>
+        <Text style={styles.confirmHeading}>Tem certeza?</Text>
+        <Text style={styles.confirmText}>Deseja realmente excluir sua conta? Esta ação não pode ser desfeita.</Text>
+        <View style={styles.confirmButtonContainer}>
+          <TouchableOpacity onPress={deleteAccount} style={styles.confirmButton}>
+            <Text style={styles.confirmButtonText}>Sim, excluir conta</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={cancelDelete} style={styles.cancelButton}>
+            <Text style={styles.cancelButtonText}>Cancelar</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  // Página normal de edição de perfil
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Editar Perfil</Text>
@@ -98,6 +137,11 @@ const ProfileScreen = () => {
       />
 
       <Button title="Salvar" onPress={updateProfile} color="#8a0b07" />
+
+      {/* Botão de Excluir Conta */}
+      <TouchableOpacity onPress={showConfirmDelete} style={styles.deleteButton}>
+        <Text style={styles.deleteButtonText}>Excluir Conta</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -120,7 +164,6 @@ const styles = StyleSheet.create({
     borderRadius: 75,
     alignSelf: 'center',
     marginBottom: 10,
-    
   },
   imageText: {
     textAlign: 'center',
@@ -133,6 +176,65 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 10,
     marginBottom: 10,
+  },
+  deleteButton: {
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: 'red',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  deleteButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  // Estilos para a página de confirmação
+  confirmContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#f5f5f5',
+  },
+  confirmHeading: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#8a0b07',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  confirmText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+    color: '#333',
+  },
+  confirmButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+  },
+  confirmButton: {
+    padding: 10,
+    backgroundColor: 'red',
+    borderRadius: 10,
+    width: '45%',
+    alignItems: 'center',
+  },
+  confirmButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  cancelButton: {
+    padding: 10,
+    backgroundColor: '#ccc',
+    borderRadius: 10,
+    width: '45%',
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: '#333',
+    fontWeight: 'bold',
   },
 });
 

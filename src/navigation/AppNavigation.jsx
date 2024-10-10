@@ -94,7 +94,7 @@ function Navbar({ navigation }) {
           <Menu.Item 
             onPress={() => {
               closeMenu();
-              navigation.navigate('Welcome');
+              navigation.navigate('Splash');
             }} 
             title="Sair"
             icon="logout" // Nome direto do ícone, usando o MaterialCommunityIcons
