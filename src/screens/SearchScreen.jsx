@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert } from 'react-native';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
 
@@ -23,7 +23,6 @@ const SearchScreen = () => {
   const [suggestedErrors, setSuggestedErrors] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Função para buscar erros aleatórios ao carregar a tela
   const fetchRandomErrors = async () => {
     try {
       const q = collection(db, 'error'); // Busca todos os erros
@@ -41,15 +40,13 @@ const SearchScreen = () => {
     }
   };
 
-  // Chama a função de busca de erros ao carregar a tela
   useEffect(() => {
     fetchRandomErrors();
   }, []);
 
-  // Função para buscar erros com base no termo de pesquisa
   const searchErrors = async (term) => {
     if (!term.trim()) {
-      alert("Por favor, insira um termo de busca.");
+      Alert.alert("Validação", "Por favor, insira um termo de busca.");
       return;
     }
 
@@ -57,20 +54,20 @@ const SearchScreen = () => {
     setResults([]); // Limpa os resultados anteriores
 
     try {
-      const q = collection(db, 'error'); // Aqui a busca é genérica, por simplicidade
+      const q = collection(db, 'error');
       const querySnapshot = await getDocs(q);
       const searchResults = querySnapshot.docs
         .map((doc) => ({ id: doc.id, ...doc.data() }))
-        .filter((error) => error.nome?.toLowerCase().includes(term.toLowerCase())); // Busca por nome, com validação
+        .filter((error) => error.nome?.toLowerCase().includes(term.toLowerCase()));
 
       if (searchResults.length === 0) {
-        alert('Nenhum erro encontrado.');
+        Alert.alert("Resultados", "Nenhum erro encontrado.");
       } else {
         setResults(searchResults);
       }
     } catch (error) {
       console.error("Erro ao buscar os dados: ", error);
-      alert('Erro ao buscar os dados.');
+      Alert.alert("Erro", "Erro ao buscar os dados.");
     } finally {
       setLoading(false);
     }
@@ -78,13 +75,13 @@ const SearchScreen = () => {
 
   const renderResult = ({ item }) => (
     <View style={styles.resultBox}>
-      <Text style={styles.errorName}>{item.nome ? item.nome : 'Nome não disponível'}</Text>
+      <Text style={styles.errorName}>{item.nome || 'Nome não disponível'}</Text>
       <Text style={styles.sectionTitle}>Explicação:</Text>
-      <Text>{item.info ? item.info : 'Informação não disponível'}</Text>
+      <Text>{item.info || 'Informação não disponível'}</Text>
       <Text style={styles.sectionTitle}>Soluções:</Text>
-      <Text>{item.solucao ? item.solucao : 'Solução não disponível'}</Text>
+      <Text>{item.solucao || 'Solução não disponível'}</Text>
       <Text style={styles.sectionTitle}>Exemplos:</Text>
-      <Text>{item.exemplo ? item.exemplo : 'Exemplo não disponível'}</Text>
+      <Text>{item.exemplo || 'Exemplo não disponível'}</Text>
     </View>
   );
 
@@ -100,7 +97,7 @@ const SearchScreen = () => {
             key={index}
             style={styles.errorButton}
             onPress={() => searchErrors(error.nome)}>
-            <Text style={styles.errorButtonText}>{error.nome ? error.nome : 'Erro'}</Text>
+            <Text style={styles.errorButtonText}>{error.nome || 'Erro'}</Text>
           </TouchableOpacity>
         ))}
       </View>

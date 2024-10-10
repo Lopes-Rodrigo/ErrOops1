@@ -1,12 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity} from 'react-native';
-import {Image} from 'expo-image';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Image } from 'expo-image';
+
 export default function WelcomeScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <Text style={styles.logo}>ErrOops</Text>
       <Image 
-        source={require('../../assets/iconeErrOops.png')}  // Substitua pelo link da sua imagem ou use require para imagens locais
+        source={require('../../assets/iconeErrOops.png')}
         style={styles.image}
       />
       <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Login')}>
@@ -32,7 +33,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   image: {
-    marginTop:20,
+    marginTop: 20,
     width: 600,
     height: 100,
     borderRadius: 50,
