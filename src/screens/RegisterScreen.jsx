@@ -36,13 +36,13 @@ export default function RegisterScreen({ navigation }) {
       setError('As senhas não coincidem');
       return;
     }
-
+  
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
+  
       let profileImageUrl = null;
-
+  
       // Se o usuário selecionou uma imagem, faça o upload para o Firebase Storage
       if (profileImage) {
         const imageRef = ref(storage, `profileImages/${user.uid}`);
@@ -51,15 +51,16 @@ export default function RegisterScreen({ navigation }) {
         await uploadBytes(imageRef, bytes);
         profileImageUrl = await getDownloadURL(imageRef); // Obter o URL da imagem
       }
-
-      // Armazenar os dados do usuário no Firestore
+  
+      // Armazenar os dados do usuário no Firestore com o campo autenticacao = 1
       await setDoc(doc(db, 'usuarios', user.uid), {
         nome: name,
         email: user.email,
         uid: user.uid,
         profileImageUrl: profileImageUrl, // URL da imagem de perfil
+        autenticacao: 1, // Adicionando o campo autenticacao com valor 1
       });
-
+  
       navigation.navigate('Login'); // Redireciona para a página de login após o registro
     } catch (error) {
       setError(error.message);
@@ -72,18 +73,19 @@ export default function RegisterScreen({ navigation }) {
       .then(async (result) => {
         const user = result.user;
         console.log('Usuário logado com Google:', user);
-
+  
         // Pegar a foto de perfil do Google
         const googleProfileImageUrl = user.photoURL;
-
-        // Armazenar os dados do usuário no Firestore (login com Google)
+  
+        // Armazenar os dados do usuário no Firestore com o campo autenticacao = 1
         await setDoc(doc(db, 'usuarios', user.uid), {
           nome: user.displayName || 'Usuário Google',
           email: user.email,
           uid: user.uid,
           profileImageUrl: googleProfileImageUrl, // URL da imagem de perfil do Google
+          autenticacao: 1, // Adicionando o campo autenticacao com valor 1
         });
-
+  
         navigation.navigate('Main'); // Redireciona para a página principal após login com Google
       })
       .catch((error) => {

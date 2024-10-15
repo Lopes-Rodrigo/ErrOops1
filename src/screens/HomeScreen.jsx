@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, Dimensions } from 'react-native';
-import Carousel from 'react-native-snap-carousel-v4'; // Certifique-se de usar a versão correta
 import { getAuth } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
@@ -14,14 +13,7 @@ const HomeScreen = () => {
   const db = getFirestore();
   const navigation = useNavigation();
 
-  const errorData = [
-    { id: '1', title: 'Erro 404', description: 'Página não encontrada' },
-    { id: '2', title: 'Erro 500', description: 'Erro interno do servidor' },
-    { id: '3', title: 'Erro 403', description: 'Acesso negado' },
-    { id: '4', title: 'Erro 401', description: 'Não autorizado' },
-    { id: '5', title: 'Erro 502', description: 'Bad Gateway' },
-  ];
-
+ 
   useEffect(() => {
     const fetchUserName = async () => {
       const user = auth.currentUser;
@@ -37,23 +29,7 @@ const HomeScreen = () => {
     fetchUserName();
   }, []);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (carouselRef.current) {
-        carouselRef.current.snapToNext();
-      }
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const renderItem = ({ item }) => {
-    return (
-      <View style={styles.errorCard}>
-        <Text style={styles.errorTitle}>{item.title}</Text>
-        <Text style={styles.errorDescription}>{item.description}</Text>
-      </View>
-    );
-  };
+  
 
   return (
     <View style={styles.container}>
@@ -63,33 +39,7 @@ const HomeScreen = () => {
 
       <Text style={styles.heading}>Como podemos te ajudar hoje?</Text>
 
-      <View style={styles.quickActions}>
-        <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('Search')}>
-          <Text style={styles.actionText}>Pesquisar Erro</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('Community')}>
-          <Text style={styles.actionText}>Comunidade</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('SearchChatScreen')}>
-          <Text style={styles.actionText}>Mensagens</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.carouselContainer}>
-        <Carousel
-          ref={carouselRef}
-          data={errorData}
-          renderItem={renderItem}
-          sliderWidth={screenWidth}
-          itemWidth={screenWidth * 0.8}
-          loop={true}
-          autoplay={true}
-          autoplayDelay={500}
-          autoplayInterval={3000}
-        />
-      </View>
+      
     </View>
   );
 };

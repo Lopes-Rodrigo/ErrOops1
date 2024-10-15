@@ -1,44 +1,81 @@
 import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';  
+import Icon from 'react-native-vector-icons/Ionicons';
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { FontAwesome } from 'react-native-vector-icons';
+import { getFirestore, doc, getDoc } from 'firebase/firestore'; // Firestore
 
+const db = getFirestore();
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     setError('');
-    signInWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        const user = userCredential.user;
-        navigation.navigate('Main');
-      })
-      .catch((error) => {
-        const errorCode = error.code;
-        if (errorCode === 'auth/wrong-password') {
-          setError('Senha incorreta. Tente novamente.');
-        } else if (errorCode === 'auth/user-not-found') {
-          setError('Usuário não encontrado.');
+
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Obter o documento do Firestore do usuário logado
+      const userDoc = await getDoc(doc(db, 'usuarios', user.uid));
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+
+        // Verificar o campo autenticacao e navegar para a tela correta
+        if (userData.autenticacao === 1) {
+          navigation.navigate('Main'); // Tela principal
+        } else if (userData.autenticacao === 3) {
+          navigation.navigate('PainelAdm'); // Tela de admin
         } else {
-          setError('Erro desconhecido.');
+          setError('Permissão inválida.');
         }
-      });
+      } else {
+        setError('Dados do usuário não encontrados.');
+      }
+    } catch (error) {
+      const errorCode = error.code;
+      if (errorCode === 'auth/wrong-password') {
+        setError('Senha incorreta. Tente novamente.');
+      } else if (errorCode === 'auth/user-not-found') {
+        setError('Usuário não encontrado.');
+      } else {
+        setError('Erro desconhecido.');
+      }
+    }
   };
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider)
-      .then((result) => {
-        navigation.navigate('Main');
-      })
-      .catch((error) => {
-        setError(error.message);
-      });
+
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      // Obter o documento do Firestore do usuário logado
+      const userDoc = await getDoc(doc(db, 'usuarios', user.uid));
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+
+        // Verificar o campo autenticacao e navegar para a tela correta
+        if (userData.autenticacao === 1) {
+          navigation.navigate('Main'); // Tela principal
+        } else if (userData.autenticacao === 3) {
+          navigation.navigate('PainelAdmScreen'); // Tela de admin
+        } else {
+          setError('Permissão inválida.');
+        }
+      } else {
+        setError('Dados do usuário não encontrados.');
+      }
+    } catch (error) {
+      setError(error.message);
+    }
   };
 
   return (

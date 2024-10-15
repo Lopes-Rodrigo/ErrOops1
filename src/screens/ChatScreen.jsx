@@ -1,36 +1,73 @@
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, Button, FlatList, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, query, orderBy, onSnapshot, addDoc, doc, getDoc } from 'firebase/firestore';
+import { getFirestore, collection, query, orderBy, onSnapshot, addDoc, doc, getDoc, setDoc } from 'firebase/firestore';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { serverTimestamp } from 'firebase/firestore';
-import { Ionicons } from '@expo/vector-icons'; // Ícones, incluindo a seta de voltar
+import { Ionicons } from '@expo/vector-icons'; 
 
 // Configuração do Firebase
 const firebaseConfig = {
+
   apiKey: "AIzaSyDcQU6h9Hdl_iABchuS3OvK-xKB44Gt43Y",
+
   authDomain: "erroops-93c8a.firebaseapp.com",
+
   projectId: "erroops-93c8a",
+
   storageBucket: "erroops-93c8a.appspot.com",
+
   messagingSenderId: "694707365976",
+
   appId: "1:694707365976:web:440ace5273d2c0aa4c022d"
+
 };
 
 // Inicializa o Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
 const ChatScreen = ({ route, navigation }) => {
   const { userId, otherUserId } = route.params;
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [otherUserData, setOtherUserData] = useState(null);
+  const [onlineStatus, setOnlineStatus] = useState(false);
 
-  // Puxa os dados do outro usuário da coleção "usuarios"
+  // Atualiza o status de "online" no Firestore quando o usuário está conectado
+  useEffect(() => {
+    const updateStatus = async (status) => {
+      const userDocRef = doc(db, 'onlineStatus', userId);
+      if (status === 'online') {
+        await setDoc(userDocRef, { status: 'online', lastSeen: serverTimestamp() }, { merge: true });
+      } else {
+        await setDoc(userDocRef, { status: 'offline', lastSeen: serverTimestamp() }, { merge: true });
+      }
+    };
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        updateStatus('online');
+      } else {
+        updateStatus('offline');
+      }
+    });
+
+    return () => {
+      updateStatus('offline');
+      unsubscribe();
+    };
+  }, [userId]);
+
+  // Puxa dados do outro usuário
   useEffect(() => {
     const fetchOtherUserData = async () => {
       const otherUserDoc = await getDoc(doc(db, 'usuarios', otherUserId));
+      const otherUserStatusDoc = await getDoc(doc(db, 'onlineStatus', otherUserId));
+      
       if (otherUserDoc.exists()) {
-        setOtherUserData(otherUserDoc.data());
+        setOtherUserData({ ...otherUserDoc.data(), ...otherUserStatusDoc.data() });
       }
     };
     fetchOtherUserData();
@@ -88,7 +125,7 @@ const ChatScreen = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* Barra de navegação com a seta de voltar, foto do usuário e nome */}
+      {/* Barra de navegação */}
       <View style={styles.navBar}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#8a0b07" />
@@ -102,7 +139,7 @@ const ChatScreen = ({ route, navigation }) => {
             <View style={styles.userDetails}>
               <Text style={styles.userName}>{otherUserData.nome || 'Usuário'}</Text>
               <Text style={styles.lastLogin}>
-                Última vez online: {otherUserData.ultimoLogin?.toDate().toLocaleString() || 'Desconhecido'}
+                {otherUserData.status === 'online' ? 'Online' : `Última vez online: ${otherUserData.lastSeen?.toDate().toLocaleString() || 'Desconhecido'}`}
               </Text>
             </View>
           </View>
@@ -134,39 +171,40 @@ const ChatScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f9f9f9',
     justifyContent: 'space-between',
   },
   navBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
+    padding: 15,
+    backgroundColor: '#ffffff',
     borderBottomWidth: 1,
     borderColor: '#ddd',
   },
   backButton: {
-    marginRight: 10,
+    marginRight: 15,
   },
   userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   profileImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 10,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 15,
   },
   userDetails: {
     flexDirection: 'column',
   },
   userName: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#8a0b07',
   },
   lastLogin: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#999',
   },
   messageList: {
@@ -175,7 +213,7 @@ const styles = StyleSheet.create({
   messageContainer: {
     maxWidth: '80%',
     marginVertical: 5,
-    padding: 10,
+    padding: 12,
     borderRadius: 10,
   },
   sender: {
@@ -184,22 +222,22 @@ const styles = StyleSheet.create({
   },
   receiver: {
     alignSelf: 'flex-start',
-    backgroundColor: '#f1f1f1',
+    backgroundColor: '#e1e1e1',
   },
   messageText: {
-    color: '#ffffff',
+    color: '#000',
   },
   timestamp: {
     fontSize: 10,
-    color: '#999',
+    color: '#ccc',
     textAlign: 'right',
   },
   inputContainer: {
     flexDirection: 'row',
     padding: 10,
     borderTopWidth: 1,
-    borderColor: '#eeeeee',
-    backgroundColor: '#f9f9f9',
+    borderColor: '#ddd',
+    backgroundColor: '#fff',
   },
   input: {
     flex: 1,
