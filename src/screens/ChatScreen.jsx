@@ -93,6 +93,14 @@ const ChatScreen = ({ route, navigation }) => {
         senderId: userId,
         timestamp: serverTimestamp(),
       });
+
+      // Atualiza o último status da mensagem no Firestore
+      const chatDocRef = doc(db, 'chats', chatId);
+      await setDoc(chatDocRef, {
+        lastMessage: newMessage,
+        lastMessageTime: serverTimestamp(),
+      }, { merge: true });
+
       setNewMessage('');
     }
   };
@@ -236,13 +244,14 @@ const styles = StyleSheet.create({
   },
   receiver: {
     alignSelf: 'flex-start',
-    backgroundColor: '#e1e1e1',
+    backgroundColor: '#e5e5e5',
   },
   messageText: {
-    color: '#000',
+    color: '#fff',
+    fontSize: 16,
   },
   timestamp: {
-    fontSize: 10,
+    fontSize: 12,
     color: '#ccc',
     textAlign: 'right',
   },
@@ -255,11 +264,12 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    borderColor: '#ccc',
     borderWidth: 1,
-    borderRadius: 5,
+    borderColor: '#ddd',
+    borderRadius: 25,
     padding: 10,
     marginRight: 10,
+    backgroundColor: '#f9f9f9',
   },
 });
 

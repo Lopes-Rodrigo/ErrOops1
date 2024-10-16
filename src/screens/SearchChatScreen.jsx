@@ -111,9 +111,13 @@ const SearchChatScreen = ({ navigation }) => {
         />
         <View style={styles.conversationText}>
           <Text style={styles.conversationName}>{otherUser.nome || 'Usuário Desconhecido'}</Text>
-          <Text style={styles.lastMessage}>{item.lastMessage || 'Sem mensagens'}</Text>
+          {/* Verifica e exibe a última mensagem ou mensagem padrão */}
+          <Text style={styles.lastMessage}>
+            {item.lastMessage && item.lastMessage.trim() !== '' ? item.lastMessage : 'Sem mensagens'}
+          </Text>
+          {/* Verifica e exibe a data da última mensagem */}
           <Text style={styles.messageTime}>
-            {calculateLastMessageTimeText(item.lastMessageTime)}
+            {item.lastMessageTime ? calculateLastMessageTimeText(item.lastMessageTime) : 'Data desconhecida'}
           </Text>
         </View>
       </TouchableOpacity>
@@ -121,9 +125,14 @@ const SearchChatScreen = ({ navigation }) => {
   };
 
   // Função para filtrar chats pela pesquisa
-  const filteredChats = chats.filter((chat) =>
-    chat.users.some((email) => email.toLowerCase().includes(search.toLowerCase()))
-  );
+  const filteredChats = chats.filter((chat) => {
+    if (Array.isArray(chat.users)) {
+      return chat.users.some((email) => email.toLowerCase().includes(search.toLowerCase()));
+    } else {
+      console.error('O campo users não é um array no documento de chat:', chat);
+      return false; // Ignora este chat se não for um array
+    }
+  });
 
   return (
     <View style={styles.container}>
