@@ -8,19 +8,12 @@ import { Ionicons } from '@expo/vector-icons';
 
 // Configuração do Firebase
 const firebaseConfig = {
-
   apiKey: "AIzaSyDcQU6h9Hdl_iABchuS3OvK-xKB44Gt43Y",
-
   authDomain: "erroops-93c8a.firebaseapp.com",
-
   projectId: "erroops-93c8a",
-
   storageBucket: "erroops-93c8a.appspot.com",
-
   messagingSenderId: "694707365976",
-
   appId: "1:694707365976:web:440ace5273d2c0aa4c022d"
-
 };
 
 // Inicializa o Firebase
@@ -33,7 +26,6 @@ const ChatScreen = ({ route, navigation }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [otherUserData, setOtherUserData] = useState(null);
-  const [onlineStatus, setOnlineStatus] = useState(false);
 
   // Atualiza o status de "online" no Firestore quando o usuário está conectado
   useEffect(() => {
@@ -110,6 +102,24 @@ const ChatScreen = ({ route, navigation }) => {
     return user1 < user2 ? `${user1}_${user2}` : `${user2}_${user1}`;
   };
 
+  // Calcula o tempo desde a última vez que o usuário esteve online
+  const calculateLastSeenText = (lastSeen) => {
+    const now = new Date();
+    const lastSeenDate = lastSeen.toDate();
+    const diffInMs = now - lastSeenDate;
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    const diffInDays = Math.floor(diffInHours / 24);
+
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes} minutos atrás`;
+    } else if (diffInHours < 24) {
+      return `${diffInHours} horas atrás`;
+    } else {
+      return `${diffInDays} dias atrás`;
+    }
+  };
+
   // Renderiza uma mensagem
   const renderMessage = ({ item }) => {
     const isSender = item.senderId === userId;
@@ -139,7 +149,11 @@ const ChatScreen = ({ route, navigation }) => {
             <View style={styles.userDetails}>
               <Text style={styles.userName}>{otherUserData.nome || 'Usuário'}</Text>
               <Text style={styles.lastLogin}>
-                {otherUserData.status === 'online' ? 'Online' : `Última vez online: ${otherUserData.lastSeen?.toDate().toLocaleString() || 'Desconhecido'}`}
+                {otherUserData.status === 'online'
+                  ? 'Online'
+                  : otherUserData.lastSeen
+                    ? `Última vez online: ${calculateLastSeenText(otherUserData.lastSeen)}`
+                    : 'Última vez online: Desconhecido'}
               </Text>
             </View>
           </View>
@@ -241,10 +255,10 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
+    borderColor: '#ccc',
     borderWidth: 1,
-    borderColor: '#8a0b07',
-    padding: 10,
     borderRadius: 5,
+    padding: 10,
     marginRight: 10,
   },
 });

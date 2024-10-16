@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react'; 
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import Icon from 'react-native-vector-icons/MaterialIcons';  // Importing the icon library
 
 // Configuração do Firebase
 const firebaseConfig = {
@@ -19,7 +20,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-const CommunityScreen = () => {
+const CommunityScreen = ({ navigation }) => {
   const [errorText, setErrorText] = useState('');
   const [errors, setErrors] = useState([]);
   const [comments, setComments] = useState({});
@@ -125,6 +126,14 @@ const CommunityScreen = () => {
         keyExtractor={(item) => item.id}
         style={styles.errorList}
       />
+      
+      {/* Floating Button with Icon */}
+      <TouchableOpacity
+        style={styles.floatingButton}
+        onPress={() => navigation.navigate('SearchChatScreen')} // Navigate to SearchChatScreen
+      >
+        <Icon name="message" size={30} color="white" />  {/* Message Icon */}
+      </TouchableOpacity>
     </View>
   );
 };
@@ -185,6 +194,19 @@ const styles = StyleSheet.create({
   },
   commentUser: {
     fontWeight: 'bold',
+  },
+  // Floating button styles
+  floatingButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: '#8a0b07', // Updated to the requested color
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
   },
 });
 

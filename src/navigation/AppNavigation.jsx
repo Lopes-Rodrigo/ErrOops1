@@ -10,6 +10,9 @@ import { Image } from 'expo-image'; // Importa expo-image
 import { getAuth } from 'firebase/auth'; // Assumindo que Firebase Auth está configurado
 import { getFirestore, doc, getDoc } from 'firebase/firestore'; // Para acessar Firestore
 
+import UserAdminScreen from '../screens/UserAdminScreen';
+import ControleErroScreen from '../screens/ControleErroScreen';
+import ControleComuScreen from '../screens/ControleComuScreen';
 import SplashScreen from '../screens/SplashScreen'; 
 import HomeScreen from '../screens/HomeScreen';
 import ChatScreen from '../screens/ChatScreen';
@@ -21,6 +24,8 @@ import RegisterScreen from '../screens/RegisterScreen';
 import LoginScreen from '../screens/LoginScreen';
 import SearchChatScreen from '../screens/SearchChatScreen';
 import AdminScreen from '../screens/PainelAdmScreen';
+
+
 
 const Stack = createNativeStackNavigator();
 const Tab = createMaterialBottomTabNavigator();
@@ -116,6 +121,9 @@ export default function AppNavigator() {
         <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
         <Stack.Screen name="ChatScreen" component={ChatScreen} options={{ headerShown: false }} />
         <Stack.Screen name="PainelAdm" component={AdminScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="ControleErroScreen" component={ControleErroScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="ControleComuScreen" component={ControleComuScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="UserAdminScreen" component={UserAdminScreen} options={{ headerShown: false }} />
         <Stack.Screen
           name="Main"
           component={TabNavigator}

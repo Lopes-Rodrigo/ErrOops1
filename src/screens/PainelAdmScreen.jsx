@@ -2,6 +2,10 @@
 import React from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
 
+
+
+
+
 const AdminMenuScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
@@ -15,12 +19,12 @@ const AdminMenuScreen = ({ navigation }) => {
 
       <Button
         title="Gerenciamento de Erros"
-        onPress={() => navigation.navigate('ErrorAdminScreen')} // Navegar para CRUD de erros (tabela errors)
+        onPress={() => navigation.navigate('ControleErroScreen')} // Navegar para CRUD de erros (tabela errors)
       />
 
       <Button
         title="Gerenciamento de Outros Erros"
-        onPress={() => navigation.navigate('AdminScreen')} // Navegar para CRUD de erros (tabela error)
+        onPress={() => navigation.navigate('ControleComuScreen')} // Navegar para CRUD de erros (tabela error)
       />
     </View>
   );
@@ -32,3 +36,4 @@ const styles = StyleSheet.create({
 });
 
 export default AdminMenuScreen;
+

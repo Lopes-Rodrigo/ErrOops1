@@ -34,7 +34,7 @@ const HomeScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.navbar}>
-        <Text style={styles.welcomeText}>Olá, {userName}! 👋</Text>
+        <Text style={styles.welcomeText}>Olá, {userName}!</Text>
       </View>
 
       <Text style={styles.heading}>Como podemos te ajudar hoje?</Text>

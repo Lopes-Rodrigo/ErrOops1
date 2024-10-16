@@ -73,6 +73,26 @@ const SearchChatScreen = ({ navigation }) => {
     navigation.navigate('ChatScreen', { userId: loggedUser.uid, otherUserId: otherUser.id });
   };
 
+  // Calcula o tempo desde a última mensagem (em horas ou dias)
+  const calculateLastMessageTimeText = (lastMessageTime) => {
+    if (!lastMessageTime) return 'Data desconhecida';
+    
+    const now = new Date();
+    const messageTimeDate = lastMessageTime.toDate();
+    const diffInMs = now - messageTimeDate;
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    const diffInDays = Math.floor(diffInHours / 24);
+
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes} minutos atrás`;
+    } else if (diffInHours < 24) {
+      return `${diffInHours} horas atrás`;
+    } else {
+      return `${diffInDays} dias atrás`;
+    }
+  };
+
   // Renderiza a lista de chats com última mensagem e horário
   const renderChat = ({ item }) => {
     const otherUserEmail = item.users.find((email) => email !== loggedUser.email); // Encontra o outro usuário
@@ -93,7 +113,7 @@ const SearchChatScreen = ({ navigation }) => {
           <Text style={styles.conversationName}>{otherUser.nome || 'Usuário Desconhecido'}</Text>
           <Text style={styles.lastMessage}>{item.lastMessage || 'Sem mensagens'}</Text>
           <Text style={styles.messageTime}>
-            {item.lastMessageTime?.toDate().toLocaleString('pt-BR') || 'Data desconhecida'}
+            {calculateLastMessageTimeText(item.lastMessageTime)}
           </Text>
         </View>
       </TouchableOpacity>
