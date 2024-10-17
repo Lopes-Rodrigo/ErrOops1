@@ -27,8 +27,8 @@ export default function LoginScreen({ navigation }) {
         const userData = userDoc.data();
 
         // Verificar o campo autenticacao e navegar para a tela correta
-        if (userData.autenticacao === 1) {
-          navigation.navigate('Main'); // Tela principal
+        if (userData.autenticacao === 1 || userData.autenticacao === 2) {
+          navigation.navigate('Main'); // Tela principal (tanto para usuários quanto empresas)
         } else if (userData.autenticacao === 3) {
           navigation.navigate('PainelAdm'); // Tela de admin
         } else {
@@ -63,8 +63,8 @@ export default function LoginScreen({ navigation }) {
         const userData = userDoc.data();
 
         // Verificar o campo autenticacao e navegar para a tela correta
-        if (userData.autenticacao === 1) {
-          navigation.navigate('Main'); // Tela principal
+        if (userData.autenticacao === 1 || userData.autenticacao === 2) {
+          navigation.navigate('Main'); // Tela principal (tanto para usuários quanto empresas)
         } else if (userData.autenticacao === 3) {
           navigation.navigate('PainelAdmScreen'); // Tela de admin
         } else {

@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createMaterialBottomTabNavigator } from '@react-navigation/material-bottom-tabs';
 import { MaterialCommunityIcons } from 'react-native-vector-icons';
-import { useTheme } from 'react-native-paper';
-import { Menu, Divider, Button, Provider } from 'react-native-paper';
+import { Menu, Divider, Provider, useTheme } from 'react-native-paper';
 import { Image } from 'expo-image'; // Importa expo-image
 import { getAuth } from 'firebase/auth'; // Assumindo que Firebase Auth está configurado
 import { getFirestore, doc, getDoc } from 'firebase/firestore'; // Para acessar Firestore
@@ -24,15 +23,13 @@ import RegisterScreen from '../screens/RegisterScreen';
 import LoginScreen from '../screens/LoginScreen';
 import SearchChatScreen from '../screens/SearchChatScreen';
 import AdminScreen from '../screens/PainelAdmScreen';
-
-
+import EmpresaScreen from '../screens/EmpresaScreen';
+import PostagemScreen from '../screens/PostagemScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createMaterialBottomTabNavigator();
 
 // Navbar superior com botão de perfil à direita
-
-
 function Navbar({ navigation }) {
   const [visible, setVisible] = useState(false);
   const [profileImageUrl, setProfileImageUrl] = useState(null); // Armazena a URL da imagem do usuário
@@ -45,7 +42,7 @@ function Navbar({ navigation }) {
     const user = auth.currentUser; // Usuário logado
     if (user) {
       const userDoc = doc(db, 'usuarios', user.uid); // Referência ao documento do usuário
-      const userSnap = await getDoc(userDoc); // Obtem os dados do Firestore
+      const userSnap = await getDoc(userDoc); // Obtém os dados do Firestore
       if (userSnap.exists()) {
         const userData = userSnap.data();
         setProfileImageUrl(userData.profileImageUrl); // Pega a URL da imagem de perfil
@@ -124,6 +121,8 @@ export default function AppNavigator() {
         <Stack.Screen name="ControleErroScreen" component={ControleErroScreen} options={{ headerShown: false }} />
         <Stack.Screen name="ControleComuScreen" component={ControleComuScreen} options={{ headerShown: false }} />
         <Stack.Screen name="UserAdminScreen" component={UserAdminScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="SearchChatScreen" component={SearchChatScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="PostagemScreen" component={PostagemScreen} options={{ headerShown: false }} />
         <Stack.Screen
           name="Main"
           component={TabNavigator}
@@ -131,6 +130,7 @@ export default function AppNavigator() {
             headerTitle: () => <Navbar navigation={navigation} />,
             headerStyle: { backgroundColor: '#8a0b07' },
             headerTitleAlign: 'center',
+            headerLeft: null,
           })}
         />
         <Stack.Screen
@@ -188,12 +188,12 @@ function TabNavigator() {
         }}
       />
       <Tab.Screen
-        name="SearchChatScreen"
-        component={SearchChatScreen}
+        name="EmpresaScreen"
+        component={EmpresaScreen}
         options={{
-          title: 'Mensagens',
+          title: 'Empresas',
           tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="android-messages" color={color} size={26} />
+            <MaterialCommunityIcons name="briefcase-eye" color={color} size={26} />
           ),
         }}
       />
@@ -205,25 +205,25 @@ function TabNavigator() {
 const styles = StyleSheet.create({
   navbar: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center', // Centraliza o conteúdo horizontalmente
+    justifyContent: 'space-between', // Espaça os elementos da barra de navegação
+    alignItems: 'center', // Alinha verticalmente os itens no centro
     paddingHorizontal: 15,
     height: 60,
     backgroundColor: '#8a0b07',
   },
   profileButton: {
     padding: 10,
-    position: "relative",
-    alignItems: "center", // Centraliza a imagem horizontalmente
-    marginLeft: 400,
+    flexDirection: 'row',
+    alignSelf:'flex-end',
+    marginLeft: 'auto', // Faz o botão de perfil ir para a direita
   },
   userImage: {
-    width: 40, // Largura do avatar
-    height: 40, // Altura do avatar
+    width: 40, // Define a largura da imagem do usuário
+    height: 40, // Define a altura da imagem do usuário
     borderRadius: 20, // Faz a imagem ficar redonda
   },
   menuContent: {
-    marginLeft: 205, // Ajusta a margem para evitar que o menu fique muito no canto
-    marginTop: 35,   // Ajusta a margem superior para garantir espaço entre a imagem e o menu
+    marginLeft: Dimensions.get('window').width * 0.4, // Responsivo para ajustar margem lateral
+    marginTop: 35,
   },
 });
