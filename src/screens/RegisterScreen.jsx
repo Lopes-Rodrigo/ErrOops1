@@ -99,7 +99,7 @@ export default function RegisterScreen({ navigation }) {
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <Icon name="arrow-back" size={24} color="#fff" />
       </TouchableOpacity>
-      
+      <Text style={styles.title}>Registrar-se</Text>
       {/* Exibir imagem de perfil, se houver */}
       {imageUri ? <Image source={{ uri: imageUri }} style={styles.profileImage} /> : null}
 
@@ -160,6 +160,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 20,
     backgroundColor: '#ffffff',
+    paddingTop: 110, // Aumentando o padding no topo
   },
   input: {
     backgroundColor: '#f1f1f1',
@@ -183,7 +184,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    top: 40,
+    top: 40, // Ajuste para garantir que fique no topo
     left: 20,
     backgroundColor: '#8a0b07',
     padding: 10,
@@ -220,5 +221,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     marginBottom: 15,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 30,
+    color: '#8a0b07',
+    textAlign: 'center',
   },
 });
