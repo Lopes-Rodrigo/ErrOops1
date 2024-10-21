@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, FlatList, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, TextInput, Button, FlatList, TouchableOpacity, StyleSheet, Image, Modal, Pressable } from 'react-native';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import Icon from 'react-native-vector-icons/MaterialIcons';  // Importando a biblioteca de ícones
+import { BlurView } from 'expo-blur'; // Biblioteca para desfocar o fundo
 
 // Firebase config
 const firebaseConfig = {
@@ -25,9 +26,9 @@ const EmpresaScreen = ({ navigation }) => {
   const [comments, setComments] = useState({});
   const [likes, setLikes] = useState({});
   const [userAuth, setUserAuth] = useState(null); // Para rastrear o campo de "autenticacao" do usuário
+  const [selectedImage, setSelectedImage] = useState(null); // Estado para controlar a imagem ampliada
 
   useEffect(() => {
-    // Fetch user info and check 'autenticacao' field
     const user = auth.currentUser;
     if (user) {
       const unsubscribe = onSnapshot(doc(db, 'usuarios', user.uid), (doc) => {
@@ -41,7 +42,6 @@ const EmpresaScreen = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
-    // Fetch posts from the 'posts' collection
     const unsubscribe = onSnapshot(collection(db, 'posts'), (snapshot) => {
       const postsData = snapshot.docs.map((doc) => ({
         id: doc.id,
@@ -92,7 +92,9 @@ const EmpresaScreen = ({ navigation }) => {
       <View style={styles.postBox}>
         <Text style={styles.username}>{item.email}</Text>
         {item.imageUrl && (
-          <Image source={{ uri: item.imageUrl }} style={styles.postImage} />
+          <TouchableOpacity onPress={() => setSelectedImage(item.imageUrl)}>
+            <Image source={{ uri: item.imageUrl }} style={styles.postImage} />
+          </TouchableOpacity>
         )}
         <Text style={styles.postText}>{item.caption}</Text>
 
@@ -136,14 +138,31 @@ const EmpresaScreen = ({ navigation }) => {
         style={styles.postList}
       />
 
-      {/* Mostrar o botão de postagem apenas para empresas (autenticacao = 2) */}
       {userAuth === 2 && (
         <TouchableOpacity
           style={styles.floatingButton}
-          onPress={() => navigation.navigate('PostagemScreen')} // Navegar para PostagemScreen
+          onPress={() => navigation.navigate('PostagemScreen')}
         >
-          <Icon name="add" size={30} color="white" /> {/* Ícone de adicionar */}
+          <Icon name="add" size={30} color="white" />
         </TouchableOpacity>
+      )}
+
+      {/* Modal para a imagem ampliada */}
+      {selectedImage && (
+        <Modal
+          transparent={true}
+          visible={!!selectedImage}
+          onRequestClose={() => setSelectedImage(null)}
+        >
+          <View style={styles.modalContainer}>
+            <BlurView intensity={100} style={styles.blurBackground}>
+              <Pressable onPress={() => setSelectedImage(null)} style={styles.closeButton}>
+                <Text style={styles.closeText}>Fechar</Text>
+              </Pressable>
+              <Image source={{ uri: selectedImage }} style={styles.fullscreenImage} resizeMode="contain" />
+            </BlurView>
+          </View>
+        </Modal>
       )}
     </View>
   );
@@ -220,6 +239,36 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  blurBackground: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullscreenImage: {
+    width: '90%',
+    height: '70%',
+    borderRadius: 10,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    padding: 10,
+  },
+  closeText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
 
