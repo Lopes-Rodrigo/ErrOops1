@@ -9,12 +9,12 @@ const ProfileScreen = () => {
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [photoURL, setPhotoURL] = useState('');
-  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false); // Novo estado para confirmar exclusão
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState('');
   const user = auth.currentUser;
   const navigation = useNavigation();
 
   useEffect(() => {
-    // Puxa os dados do Firestore da coleção 'usuarios'
     const fetchUserData = async () => {
       const userDoc = await getDoc(doc(db, 'usuarios', user.uid));
       if (userDoc.exists()) {
@@ -30,14 +30,11 @@ const ProfileScreen = () => {
 
   const updateProfile = async () => {
     try {
-      // Atualiza os dados no Firestore da coleção 'usuarios'
       await setDoc(doc(db, 'usuarios', user.uid), {
         nome: displayName,
         email,
         profileImageUrl: photoURL,
       });
-
-      // Atualiza o perfil no Firebase Authentication
       await user.updateProfile({
         displayName,
         photoURL,
@@ -70,11 +67,8 @@ const ProfileScreen = () => {
 
   const deleteAccount = async () => {
     try {
-      // Deleta o documento do Firestore
       await deleteDoc(doc(db, 'usuarios', user.uid));
-      // Deleta a conta do Firebase Authentication
       await user.delete();
-      // Redireciona para a SplashScreen
       navigation.replace('Splash');
     } catch (error) {
       console.error('Erro ao excluir conta: ', error);
@@ -83,15 +77,18 @@ const ProfileScreen = () => {
   };
 
   const showConfirmDelete = () => {
-    setIsConfirmingDelete(true); // Exibe a página de confirmação
+    setIsConfirmingDelete(true);
   };
 
   const cancelDelete = () => {
-    setIsConfirmingDelete(false); // Oculta a página de confirmação
+    setIsConfirmingDelete(false);
+  };
+
+  const resetPassword = () => {
+    navigation.navigate('ResetPassword');
   };
 
   if (isConfirmingDelete) {
-    // Página de confirmação de exclusão de conta
     return (
       <View style={styles.confirmContainer}>
         <Text style={styles.confirmHeading}>Tem certeza?</Text>
@@ -108,7 +105,6 @@ const ProfileScreen = () => {
     );
   }
 
-  // Página normal de edição de perfil
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Editar Perfil</Text>
@@ -138,7 +134,10 @@ const ProfileScreen = () => {
 
       <Button title="Salvar" onPress={updateProfile} color="#8a0b07" />
 
-      {/* Botão de Excluir Conta */}
+      <TouchableOpacity onPress={resetPassword} style={styles.resetPasswordButton}>
+        <Text style={styles.resetPasswordButtonText}>Redefinir Senha</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity onPress={showConfirmDelete} style={styles.deleteButton}>
         <Text style={styles.deleteButtonText}>Excluir Conta</Text>
       </TouchableOpacity>
@@ -177,10 +176,21 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 10,
   },
-  deleteButton: {
+  resetPasswordButton: {
     marginTop: 20,
     padding: 10,
-    backgroundColor: 'red',
+    backgroundColor: '#8a0b07',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  resetPasswordButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  deleteButton: {
+    marginTop: 'auto',
+    padding: 10,
+    backgroundColor: '#8a0b07',
     borderRadius: 10,
     alignItems: 'center',
   },
@@ -188,7 +198,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
-  // Estilos para a página de confirmação
   confirmContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -216,7 +225,7 @@ const styles = StyleSheet.create({
   },
   confirmButton: {
     padding: 10,
-    backgroundColor: 'red',
+    backgroundColor: '#8a0b07',
     borderRadius: 10,
     width: '45%',
     alignItems: 'center',
