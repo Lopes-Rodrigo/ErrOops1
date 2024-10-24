@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { FontAwesome } from 'react-native-vector-icons';
 import { getFirestore, doc, getDoc } from 'firebase/firestore'; // Firestore
+import * as Google from 'expo-auth-session/providers/google'; // Biblioteca para login com Google
 
 const db = getFirestore();
 
@@ -13,24 +14,28 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
+  // Login com Google usando Expo Auth Session
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    expoClientId: 'YOUR_EXPO_CLIENT_ID.apps.googleusercontent.com',
+    iosClientId: 'YOUR_IOS_CLIENT_ID.apps.googleusercontent.com',  // Adicione o clientId para iOS aqui
+    androidClientId: 'YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.com',  // Adicione o clientId para Android aqui
+  });
+
   const handleLogin = async () => {
     setError('');
-
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Obter o documento do Firestore do usuário logado
       const userDoc = await getDoc(doc(db, 'usuarios', user.uid));
 
       if (userDoc.exists()) {
         const userData = userDoc.data();
 
-        // Verificar o campo autenticacao e navegar para a tela correta
         if (userData.autenticacao === 1 || userData.autenticacao === 2) {
-          navigation.navigate('Main'); // Tela principal (tanto para usuários quanto empresas)
+          navigation.navigate('Main');
         } else if (userData.autenticacao === 3) {
-          navigation.navigate('PainelAdm'); // Tela de admin
+          navigation.navigate('PainelAdm');
         } else {
           setError('Permissão inválida.');
         }
@@ -49,34 +54,33 @@ export default function LoginScreen({ navigation }) {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    const provider = new GoogleAuthProvider();
+  // Função para login com Google
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const { id_token } = response.params;
+      const credential = GoogleAuthProvider.credential(id_token);
+      signInWithCredential(auth, credential)
+        .then(async (result) => {
+          const user = result.user;
 
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
+          const userDoc = await getDoc(doc(db, 'usuarios', user.uid));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
 
-      // Obter o documento do Firestore do usuário logado
-      const userDoc = await getDoc(doc(db, 'usuarios', user.uid));
-
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-
-        // Verificar o campo autenticacao e navegar para a tela correta
-        if (userData.autenticacao === 1 || userData.autenticacao === 2) {
-          navigation.navigate('Main'); // Tela principal (tanto para usuários quanto empresas)
-        } else if (userData.autenticacao === 3) {
-          navigation.navigate('PainelAdmScreen'); // Tela de admin
-        } else {
-          setError('Permissão inválida.');
-        }
-      } else {
-        setError('Dados do usuário não encontrados.');
-      }
-    } catch (error) {
-      setError(error.message);
+            if (userData.autenticacao === 1 || userData.autenticacao === 2) {
+              navigation.navigate('Main');
+            } else if (userData.autenticacao === 3) {
+              navigation.navigate('PainelAdm');
+            } else {
+              setError('Permissão inválida.');
+            }
+          } else {
+            setError('Dados do usuário não encontrados.');
+          }
+        })
+        .catch((error) => setError(error.message));
     }
-  };
+  }, [response]);
 
   return (
     <View style={styles.container}>
@@ -105,7 +109,7 @@ export default function LoginScreen({ navigation }) {
       </TouchableOpacity>
 
       <Text style={styles.orText}>Ou entre com</Text>
-      <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>
+      <TouchableOpacity style={styles.googleButton} onPress={() => promptAsync()}>
         <FontAwesome name="google" size={24} color="#8a0b07" />
       </TouchableOpacity>
     </View>

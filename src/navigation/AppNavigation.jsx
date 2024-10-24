@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { View, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
+import { View, TouchableOpacity, StyleSheet, Modal, Text, Dimensions, TouchableWithoutFeedback } from "react-native";
 import { NavigationContainer, useNavigation } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createMaterialBottomTabNavigator } from "@react-navigation/material-bottom-tabs";
 import { MaterialCommunityIcons } from "react-native-vector-icons";
-import { Menu, Divider, Provider, useTheme } from "react-native-paper";
 import { Image } from "expo-image"; // Importa expo-image
 import { getAuth, signOut } from "firebase/auth";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
+import { useTheme } from "react-native-paper";
 
 // Importando suas telas
 import SplashScreen from "../screens/SplashScreen";
@@ -22,6 +22,7 @@ import SearchScreen from "../screens/SearchScreen";
 import CommunityScreen from "../screens/CommunityScreen";
 import EmpresaScreen from "../screens/EmpresaScreen";
 import ResetPassword from "../screens/ResetPasswordScreen";
+import SearchChatScreen from "../screens/SearchChatScreen"; // Importando a tela
 
 // Firebase Config
 const firebaseConfig = {
@@ -40,13 +41,11 @@ const auth = getAuth(app);
 
 // Componente de Menu do Perfil
 const ProfileMenu = () => {
-  const [visible, setVisible] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
   const [userPhoto, setUserPhoto] = useState(null);
   const navigation = useNavigation();
-  const screenWidth = Dimensions.get("window").width; // Largura da tela
 
-  const openMenu = () => setVisible(true);
-  const closeMenu = () => setVisible(false);
+  const toggleModal = () => setModalVisible(!modalVisible);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -78,41 +77,42 @@ const ProfileMenu = () => {
 
   const handleProfileEdit = () => {
     navigation.navigate("Profile");
-    closeMenu(); // Fecha o menu
+    toggleModal(); // Fecha o modal
   };
 
   return (
-    <Provider>
-      <View style={styles.menuContainer}>
-        
-          <Menu
-            visible={visible}
-            onDismiss={closeMenu}
-            anchor={
-              <TouchableOpacity onPress={openMenu}>
-                {userPhoto ? (
-                  <Image
-                    source={{ uri: userPhoto }}
-                    style={styles.profileImage}
-                  />
-                ) : (
-                  <MaterialCommunityIcons
-                    name="account-circle"
-                    size={40}
-                    color="black"
-                  />
-                )}
-              </TouchableOpacity>
-            }
-            //style={[styles.menuStyle, { left: screenWidth * 0.7}]} // Posiciona o menu de forma dinâmica
-          >
-            <Menu.Item onPress={handleProfileEdit} title="Editar Perfil" />
-            <Divider />
-            <Menu.Item onPress={handleLogout} title="Sair" />
-          </Menu>
-        
-      </View>
-    </Provider>
+    <View style={styles.menuContainer}>
+      <TouchableOpacity onPress={toggleModal}>
+        {userPhoto ? (
+          <Image source={{ uri: userPhoto }} style={styles.profileImage} />
+        ) : (
+          <MaterialCommunityIcons name="account-circle" size={40} color="black" />
+        )}
+      </TouchableOpacity>
+
+      {/* Modal para o menu */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={toggleModal}
+      >
+        <TouchableWithoutFeedback onPress={toggleModal}>
+          <View style={styles.modalOverlay} />
+        </TouchableWithoutFeedback>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <TouchableOpacity onPress={handleProfileEdit}>
+              <Text style={styles.menuItem}>Editar Perfil</Text>
+            </TouchableOpacity>
+            <View style={styles.divider} />
+            <TouchableOpacity onPress={handleLogout}>
+              <Text style={styles.menuItem}>Sair</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
 };
 
@@ -150,6 +150,11 @@ export default function AppNavigator() {
           options={{ headerShown: false }}
         />
         <Stack.Screen
+          name="SearchChatScreen"
+          component={SearchChatScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
           name="ResetPassword"
           component={ResetPassword}
           options={{ headerShown: false }}
@@ -162,9 +167,11 @@ export default function AppNavigator() {
             headerStyle: { backgroundColor: "#8a0b07" },
             headerTintColor: "#fff",
             headerTitleAlign: "center",
+            title: "", // Remove o título da tela Main
             headerLeft: null, // Remove a seta da esquerda
           }}
         />
+
         <Stack.Screen
           name="Profile"
           component={ProfileScreen}
@@ -173,19 +180,10 @@ export default function AppNavigator() {
             headerStyle: { backgroundColor: "#8a0b07" },
             headerTintColor: "#fff",
             headerLeft: () => (
-              <TouchableOpacity
-                onPress={() => navigation.goBack()}
-                style={{ paddingLeft: 20 }}
-              >
-                {" "}
-                {/* Espaçamento maior para a direita */}
-                <MaterialCommunityIcons
-                  name="arrow-left"
-                  size={24}
-                  color="#fff"
-                />
+              <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingLeft: 20 }}>
+                <MaterialCommunityIcons name="arrow-left" size={24} color="#fff" />
               </TouchableOpacity>
-            ), // Adiciona a seta de voltar com espaçamento ajustado
+            ),
             headerBackTitleVisible: false, // Remove o título do botão de voltar
           })}
         />
@@ -231,11 +229,7 @@ function TabNavigator() {
         options={{
           title: "Comunidade",
           tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons
-              name="account-group"
-              color={color}
-              size={26}
-            />
+            <MaterialCommunityIcons name="account-group" color={color} size={26} />
           ),
         }}
       />
@@ -245,11 +239,7 @@ function TabNavigator() {
         options={{
           title: "Empresas",
           tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons
-              name="briefcase-eye"
-              color={color}
-              size={26}
-            />
+            <MaterialCommunityIcons name="briefcase-eye" color={color} size={26} />
           ),
         }}
       />
@@ -269,8 +259,32 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
   },
-  menuStyle: {
-    // position: 'absolute',
-    // top: 100, // Ajusta conforme necessário
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContainer: {
+    position: "absolute",
+    top: 60,
+    right: 15,
+    backgroundColor: "white",
+    borderRadius: 10,
+    padding: 10,
+    width: 200,
+    elevation: 5,
+  },
+  modalContent: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  menuItem: {
+    fontSize: 16,
+    padding: 10,
+    textAlign: "center",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#ddd",
+    width: "100%",
   },
 });

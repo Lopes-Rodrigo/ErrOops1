@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-nativ
 import { auth } from '../config/firebase';
 import { updatePassword } from 'firebase/auth';
 import { useNavigation } from '@react-navigation/native';
+import { MaterialCommunityIcons } from 'react-native-vector-icons'; // Importa o ícone
 
 const ResetPassword = () => {
   const [newPassword, setNewPassword] = useState('');
@@ -41,6 +42,10 @@ const ResetPassword = () => {
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <MaterialCommunityIcons name="arrow-left" size={24} color="#8a0b07" />
+      </TouchableOpacity>
+
       <Text style={styles.heading}>Redefinir Senha</Text>
 
       <TextInput
@@ -78,6 +83,9 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: '#f5f5f5',
+  },
+  backButton: {
+    marginBottom: 20,
   },
   heading: {
     fontSize: 24,

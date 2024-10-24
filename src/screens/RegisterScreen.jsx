@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, TextInput, TouchableOpacity, Text, StyleSheet, Image } from 'react-native';
-import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import Icon from 'react-native-vector-icons/Ionicons';  // Ícone de voltar
-import { FontAwesome } from 'react-native-vector-icons'; // Ícone do Google
+import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
+import Icon from 'react-native-vector-icons/Ionicons';
+import { FontAwesome } from 'react-native-vector-icons';
 import { auth } from '../config/firebase';
-import { getFirestore, doc, setDoc } from 'firebase/firestore'; // Firestore
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'; // Firebase Storage
-import { launchImageLibrary } from 'react-native-image-picker'; // Biblioteca para escolher imagem
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { launchImageLibrary } from 'react-native-image-picker';
+import * as Google from 'expo-auth-session/providers/google';
 
 const db = getFirestore();
 const storage = getStorage();
@@ -17,16 +18,21 @@ export default function RegisterScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
-  const [profileImage, setProfileImage] = useState(null); // Para armazenar a imagem do perfil
-  const [imageUri, setImageUri] = useState(''); // Armazenar URI da imagem
+  const [profileImage, setProfileImage] = useState(null);
+  const [imageUri, setImageUri] = useState('');
 
-  // Função para selecionar imagem da galeria
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    expoClientId: 'YOUR_EXPO_CLIENT_ID.apps.googleusercontent.com',
+    iosClientId: 'YOUR_IOS_CLIENT_ID.apps.googleusercontent.com',  // Adicione o clientId para iOS aqui
+    androidClientId: 'YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.com',  // Adicione o clientId para Android aqui
+  });
+
   const selectProfileImage = () => {
     launchImageLibrary({ mediaType: 'photo' }, (response) => {
       if (!response.didCancel && !response.error && response.assets) {
         const selectedImage = response.assets[0];
         setProfileImage(selectedImage);
-        setImageUri(selectedImage.uri); // Atualizar URI da imagem
+        setImageUri(selectedImage.uri);
       }
     });
   };
@@ -36,71 +42,64 @@ export default function RegisterScreen({ navigation }) {
       setError('As senhas não coincidem');
       return;
     }
-  
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-  
+
       let profileImageUrl = null;
-  
-      // Se o usuário selecionou uma imagem, faça o upload para o Firebase Storage
+
       if (profileImage) {
         const imageRef = ref(storage, `profileImages/${user.uid}`);
         const img = await fetch(profileImage.uri);
         const bytes = await img.blob();
         await uploadBytes(imageRef, bytes);
-        profileImageUrl = await getDownloadURL(imageRef); // Obter o URL da imagem
+        profileImageUrl = await getDownloadURL(imageRef);
       }
-  
-      // Armazenar os dados do usuário no Firestore com o campo autenticacao = 1
+
       await setDoc(doc(db, 'usuarios', user.uid), {
         nome: name,
         email: user.email,
         uid: user.uid,
-        profileImageUrl: profileImageUrl, // URL da imagem de perfil
-        autenticacao: 1, // Adicionando o campo autenticacao com valor 1
+        profileImageUrl: profileImageUrl,
+        autenticacao: 1,
       });
-  
-      navigation.navigate('Login'); // Redireciona para a página de login após o registro
+
+      navigation.navigate('Login');
     } catch (error) {
       setError(error.message);
     }
   };
 
-  const handleGoogleLogin = () => {
-    const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider)
-      .then(async (result) => {
-        const user = result.user;
-        console.log('Usuário logado com Google:', user);
-  
-        // Pegar a foto de perfil do Google
-        const googleProfileImageUrl = user.photoURL;
-  
-        // Armazenar os dados do usuário no Firestore com o campo autenticacao = 1
-        await setDoc(doc(db, 'usuarios', user.uid), {
-          nome: user.displayName || 'Usuário Google',
-          email: user.email,
-          uid: user.uid,
-          profileImageUrl: googleProfileImageUrl, // URL da imagem de perfil do Google
-          autenticacao: 1, // Adicionando o campo autenticacao com valor 1
-        });
-  
-        navigation.navigate('Main'); // Redireciona para a página principal após login com Google
-      })
-      .catch((error) => {
-        setError(error.message);
-      });
-  };
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const { id_token } = response.params;
+      const credential = GoogleAuthProvider.credential(id_token);
+      signInWithCredential(auth, credential)
+        .then(async (result) => {
+          const user = result.user;
+
+          const googleProfileImageUrl = user.photoURL;
+          await setDoc(doc(db, 'usuarios', user.uid), {
+            nome: user.displayName || 'Usuário Google',
+            email: user.email,
+            uid: user.uid,
+            profileImageUrl: googleProfileImageUrl,
+            autenticacao: 1,
+          });
+
+          navigation.navigate('Main');
+        })
+        .catch((error) => setError(error.message));
+    }
+  }, [response]);
 
   return (
     <View style={styles.container}>
-      {/* Botão de voltar */}
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <Icon name="arrow-back" size={24} color="#fff" />
       </TouchableOpacity>
       <Text style={styles.title}>Registrar-se</Text>
-      {/* Exibir imagem de perfil, se houver */}
       {imageUri ? <Image source={{ uri: imageUri }} style={styles.profileImage} /> : null}
 
       <TextInput
@@ -109,7 +108,6 @@ export default function RegisterScreen({ navigation }) {
         value={name}
         onChangeText={setName}
       />
-      
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -117,7 +115,6 @@ export default function RegisterScreen({ navigation }) {
         onChangeText={setEmail}
         keyboardType="email-address"
       />
-      
       <TextInput
         style={styles.input}
         placeholder="Senha"
@@ -125,7 +122,6 @@ export default function RegisterScreen({ navigation }) {
         onChangeText={setPassword}
         secureTextEntry
       />
-      
       <TextInput
         style={styles.input}
         placeholder="Confirmar Senha"
@@ -133,10 +129,7 @@ export default function RegisterScreen({ navigation }) {
         onChangeText={setConfirmPassword}
         secureTextEntry
       />
-
       
-
-      {/* Botão para selecionar imagem */}
       <TouchableOpacity style={styles.imagePickerButton} onPress={selectProfileImage}>
         <Text style={styles.buttonText}>Escolher Foto de Perfil</Text>
       </TouchableOpacity>
@@ -146,8 +139,8 @@ export default function RegisterScreen({ navigation }) {
       <TouchableOpacity style={styles.button} onPress={handleRegister}>
         <Text style={styles.buttonText}>Registrar</Text>
       </TouchableOpacity>
-      
-      <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>
+
+      <TouchableOpacity style={styles.googleButton} onPress={() => promptAsync()}>
         <FontAwesome name="google" size={24} color="#8a0b07" />
       </TouchableOpacity>
     </View>
@@ -160,7 +153,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 20,
     backgroundColor: '#ffffff',
-    paddingTop: 110, // Aumentando o padding no topo
+    paddingTop: 110,
   },
   input: {
     backgroundColor: '#f1f1f1',
@@ -184,16 +177,11 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    top: 40, // Ajuste para garantir que fique no topo
+    top: 40,
     left: 20,
     backgroundColor: '#8a0b07',
     padding: 10,
     borderRadius: 10,
-  },
-  errorText: {
-    color: 'red',
-    marginBottom: 15,
-    textAlign: 'center',
   },
   googleButton: {
     backgroundColor: '#fff',

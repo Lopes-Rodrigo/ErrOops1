@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, Button, FlatList, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, query, orderBy, onSnapshot, addDoc, doc, getDoc, setDoc } from 'firebase/firestore';
+import { getFirestore, collection, query, orderBy, onSnapshot, addDoc, doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { serverTimestamp } from 'firebase/firestore';
-import { Ionicons } from '@expo/vector-icons'; 
+import { Ionicons } from '@expo/vector-icons';
 
 // Configuração do Firebase
 const firebaseConfig = {
@@ -23,18 +22,26 @@ const auth = getAuth(app);
 
 const ChatScreen = ({ route, navigation }) => {
   const { userId, otherUserId } = route.params;
+
+  if (!userId || !otherUserId) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorMessage}>Erro: IDs de usuário não estão disponíveis.</Text>
+      </View>
+    );
+  }
+
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [otherUserData, setOtherUserData] = useState(null);
 
-  // Atualiza o status de "online" no Firestore quando o usuário está conectado
   useEffect(() => {
     const updateStatus = async (status) => {
       const userDocRef = doc(db, 'onlineStatus', userId);
       if (status === 'online') {
-        await setDoc(userDocRef, { status: 'online', lastSeen: serverTimestamp() }, { merge: true });
+        await updateDoc(userDocRef, { status: 'online', lastSeen: serverTimestamp() }, { merge: true });
       } else {
-        await setDoc(userDocRef, { status: 'offline', lastSeen: serverTimestamp() }, { merge: true });
+        await updateDoc(userDocRef, { status: 'offline', lastSeen: serverTimestamp() }, { merge: true });
       }
     };
 
@@ -52,7 +59,6 @@ const ChatScreen = ({ route, navigation }) => {
     };
   }, [userId]);
 
-  // Puxa dados do outro usuário
   useEffect(() => {
     const fetchOtherUserData = async () => {
       const otherUserDoc = await getDoc(doc(db, 'usuarios', otherUserId));
@@ -65,52 +71,6 @@ const ChatScreen = ({ route, navigation }) => {
     fetchOtherUserData();
   }, [otherUserId]);
 
-  // Carrega mensagens e atualiza em tempo real
-  useEffect(() => {
-    const chatId = getChatId(userId, otherUserId);
-    const messagesRef = collection(db, 'chats', chatId, 'messages');
-    const q = query(messagesRef, orderBy('timestamp', 'asc'));
-
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const msgs = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setMessages(msgs);
-    });
-
-    return () => unsubscribe();
-  }, [userId, otherUserId]);
-
-  // Envia mensagem
-  const sendMessage = async () => {
-    if (newMessage.trim()) {
-      const chatId = getChatId(userId, otherUserId);
-      const messagesRef = collection(db, 'chats', chatId, 'messages');
-
-      await addDoc(messagesRef, {
-        text: newMessage,
-        senderId: userId,
-        timestamp: serverTimestamp(),
-      });
-
-      // Atualiza o último status da mensagem no Firestore
-      const chatDocRef = doc(db, 'chats', chatId);
-      await setDoc(chatDocRef, {
-        lastMessage: newMessage,
-        lastMessageTime: serverTimestamp(),
-      }, { merge: true });
-
-      setNewMessage('');
-    }
-  };
-
-  // Gera o ID do chat
-  const getChatId = (user1, user2) => {
-    return user1 < user2 ? `${user1}_${user2}` : `${user2}_${user1}`;
-  };
-
-  // Calcula o tempo desde a última vez que o usuário esteve online
   const calculateLastSeenText = (lastSeen) => {
     const now = new Date();
     const lastSeenDate = lastSeen.toDate();
@@ -128,22 +88,99 @@ const ChatScreen = ({ route, navigation }) => {
     }
   };
 
-  // Renderiza uma mensagem
+  useEffect(() => {
+    const chatId = getChatId(userId, otherUserId);
+    const messagesRef = collection(db, 'chats', chatId, 'messages');
+    const q = query(messagesRef, orderBy('timestamp', 'asc'));
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const msgs = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setMessages(msgs);
+
+      markMessagesAsDelivered(msgs); // Marca como entregues
+      markMessagesAsRead(msgs); // Marca como lidas se vistas
+    });
+
+    return () => unsubscribe();
+  }, [userId, otherUserId]);
+
+  const markMessagesAsDelivered = async (msgs) => {
+    const chatId = getChatId(userId, otherUserId);
+    msgs.forEach(async (msg) => {
+      if (msg.senderId !== userId && msg.status === 'sent') { 
+        const messageDocRef = doc(db, 'chats', chatId, 'messages', msg.id);
+        await updateDoc(messageDocRef, { status: 'delivered' });
+      }
+    });
+  };
+
+  const markMessagesAsRead = async (msgs) => {
+    const chatId = getChatId(userId, otherUserId);
+    msgs.forEach(async (msg) => {
+      if (msg.senderId !== userId && msg.status === 'delivered') { 
+        const messageDocRef = doc(db, 'chats', chatId, 'messages', msg.id);
+        await updateDoc(messageDocRef, { status: 'read' });
+      }
+    });
+  };
+
+  const sendMessage = async () => {
+    if (newMessage.trim() && userId) {
+      const chatId = getChatId(userId, otherUserId);
+      const messagesRef = collection(db, 'chats', chatId, 'messages');
+
+      try {
+        await addDoc(messagesRef, {
+          text: newMessage,
+          senderId: userId,
+          timestamp: serverTimestamp(),
+          status: 'sent',
+        });
+
+        setNewMessage('');
+      } catch (error) {
+        console.error("Erro ao enviar a mensagem: ", error);
+      }
+    } else {
+      console.warn("Mensagem ou ID do usuário não estão definidos.");
+    }
+  };
+
+  const getChatId = (user1, user2) => {
+    return user1 < user2 ? `${user1}_${user2}` : `${user2}_${user1}`;
+  };
+
+  const renderMessageStatus = (status) => {
+    if (status === 'sent') {
+      return <Ionicons name="checkmark" size={16} color="#ccc" />;
+    } else if (status === 'delivered') {
+      return <Ionicons name="checkmark-done" size={16} color="#ccc" />;
+    } else if (status === 'read') {
+      return <Ionicons name="checkmark-done" size={16} color="#007AFF" />; // Flechas azuis
+    }
+    return null;
+  };
+
   const renderMessage = ({ item }) => {
     const isSender = item.senderId === userId;
     return (
       <View style={[styles.messageContainer, isSender ? styles.sender : styles.receiver]}>
         <Text style={styles.messageText}>{item.text}</Text>
-        <Text style={styles.timestamp}>
-          {item.timestamp?.toDate().toLocaleTimeString()}
-        </Text>
+        <View style={styles.messageFooter}>
+          <Text style={styles.timestamp}>
+            {item.timestamp?.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </Text>
+          {isSender && renderMessageStatus(item.status)} {/* Verifica o status para o remetente */}
+        </View>
       </View>
     );
   };
 
   return (
     <View style={styles.container}>
-      {/* Barra de navegação */}
       <View style={styles.navBar}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#8a0b07" />
@@ -168,7 +205,6 @@ const ChatScreen = ({ route, navigation }) => {
         )}
       </View>
 
-      {/* Lista de mensagens */}
       <FlatList
         data={messages}
         keyExtractor={(item) => item.id}
@@ -176,7 +212,6 @@ const ChatScreen = ({ route, navigation }) => {
         style={styles.messageList}
       />
 
-      {/* Entrada de nova mensagem */}
       <View style={styles.inputContainer}>
         <TextInput
           placeholder="Digite uma mensagem"
@@ -244,16 +279,20 @@ const styles = StyleSheet.create({
   },
   receiver: {
     alignSelf: 'flex-start',
-    backgroundColor: '#e5e5e5',
+    backgroundColor: '#0a0a0a',
   },
   messageText: {
     color: '#fff',
     fontSize: 16,
   },
+  messageFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   timestamp: {
     fontSize: 12,
     color: '#ccc',
-    textAlign: 'right',
   },
   inputContainer: {
     flexDirection: 'row',
@@ -270,6 +309,11 @@ const styles = StyleSheet.create({
     padding: 10,
     marginRight: 10,
     backgroundColor: '#f9f9f9',
+  },
+  errorMessage: {
+    color: 'red',
+    textAlign: 'center',
+    marginTop: 20,
   },
 });
 
